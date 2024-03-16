@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Anta&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  background: theme("colors.background");
+}
+
+body {
+  overflow-x: hidden;
+  background: white;
+}
+
+header,
+.mobile-menu,
+#main,
+footer {
+  & *:not(.no-transition) {
+    transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+p {
+  margin-top: 0.7rem;
+}
+
+@layer utilities {
+  .cool-underline-hover {
+    position: relative;
+    display: inline-block;
+
+    &::before {
+      content: "";
+      display: block;
+      background: theme("colors.primary");
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      transition: inherit;
+    }
+
+    &:hover {
+      transform: translate(0, -3px);
+      opacity: 1;
+
+      &::before {
+        width: 100%;
+      }
+    }
+  }
+}
+
+footer,
+#main {
+  & a:not(.brand-link) {
+    @apply cool-underline-hover;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+}
+
+h1,
+h2,
+h3 {
+  @apply font-header underline;
+}
+
+h2 {
+  @apply text-lg;
+}

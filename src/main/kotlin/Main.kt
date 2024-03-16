@@ -21,9 +21,11 @@ fun main() {
 
     runBlocking {
         RedisWrapper.use {
-            set("test", "working!")
-            logger.info("Redis test: ${get("test")}")
-            del("test")
+            // test Redis
+            set("limo control center test", "working!")
+            val test = get("limo control center test") ?: error("Redis is not working!")
+            logger.info("Redis test: $test")
+            del("limo control center test")
         }
     }
 }

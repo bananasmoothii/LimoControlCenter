@@ -31,7 +31,7 @@ export default defineComponent({
       <Brand grow-in-md class="mx-auto md:mx-0" />
       <ul class="flex flex-col px-4">
         <li v-for="link in linksWithIconCredits"
-            class="mt-1.5 text-center last:pt-8 last:mt-auto text-lg last:text-sm last:italic">
+            class="mt-1.5 text-center last:pt-8 last:mt-auto text-lg last:text-sm last:italic last:mb-4">
           <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit md:text-left">
             {{ link.name }}
           </RouterLink>

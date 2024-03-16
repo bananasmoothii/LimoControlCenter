@@ -18,7 +18,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     // Redis
-    implementation("io.github.crackthecodeabhi:kreds:0.9.1")
+    implementation("redis.clients:jedis:5.1.2")
 
     // logging
     implementation("org.apache.logging.log4j", "log4j-core", "2.23.1")

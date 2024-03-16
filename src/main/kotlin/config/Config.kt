@@ -15,6 +15,7 @@ data class Config(
 data class RedisConfig(
     val host: String,
     val port: Int,
+    val user: String = "default",
     val password: String? = null,
     val database: Int = 0,
 )

@@ -1,13 +1,14 @@
-package fr.bananasmoothii.config
+package fr.bananasmoothii.limocontrolcenter.config
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Config(
     val redis: RedisConfig,
+    val webserver: WebserverConfig,
 ) {
     companion object {
-        fun load(): Config = loadConfig("config.yml")
+        fun load(): Config = loadConfig("server-config.yml")
     }
 }
 
@@ -18,4 +19,10 @@ data class RedisConfig(
     val user: String = "default",
     val password: String? = null,
     val database: Int = 0,
+)
+
+@Serializable
+data class WebserverConfig(
+    val host: String,
+    val port: Int,
 )

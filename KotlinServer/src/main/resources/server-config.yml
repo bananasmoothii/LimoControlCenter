@@ -5,3 +5,6 @@ redis:
   #password: 'password'
   database: 0
 
+webserver:
+  host: localhost
+  port: 80

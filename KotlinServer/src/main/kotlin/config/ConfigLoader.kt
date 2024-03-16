@@ -1,10 +1,10 @@
-package fr.bananasmoothii.config
+package fr.bananasmoothii.limocontrolcenter.config
 
 import com.charleskorn.kaml.PolymorphismStyle
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.charleskorn.kaml.decodeFromStream
-import fr.bananasmoothii.logger
+import fr.bananasmoothii.limocontrolcenter.logger
 import kotlinx.serialization.serializer
 import java.io.File
 

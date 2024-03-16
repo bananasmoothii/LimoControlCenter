@@ -3,9 +3,28 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+dist
+dist-ssr
+coverage
 
 logs/
-/config.yml
+/server-config.yml
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# NodeJS
+node_modules
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
 
 ### IntelliJ IDEA ###
 .idea

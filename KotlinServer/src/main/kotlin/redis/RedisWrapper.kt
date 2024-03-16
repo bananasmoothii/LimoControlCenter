@@ -1,7 +1,7 @@
-package fr.bananasmoothii.redis
+package fr.bananasmoothii.limocontrolcenter.redis
 
-import fr.bananasmoothii.config
-import fr.bananasmoothii.logger
+import fr.bananasmoothii.limocontrolcenter.logger
+import fr.bananasmoothii.limocontrolcenter.config
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import redis.clients.jedis.Jedis

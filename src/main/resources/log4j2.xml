@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" shutdownHook="disable">
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="%highlight{%d{dd-MM-YYYY HH:mm:ss} [%-10.10t:%-9.-9c{1}] %-5level - %msg%n}" disableAnsi="false"/>
+            <Filters>
+                <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
+        </Console>
+        <Console name="stderr" target="SYSTEM_ERR">
+            <PatternLayout pattern="%highlight{%d{dd-MM-YYYY HH:mm:ss} [%-10.10t:%-9.-9c{1}] %-5level - %msg%n}" disableAnsi="false"/>
+        </Console>
+        <RollingFile name="logfile" fileName="logs/latest.log" filePattern="logs/%d{YYYY-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{dd-MM-YYYY HH:mm:ss} [%-22.22t:%-15.-15c{1}] %-5level - %msg%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="100 KB" />
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="general" level="TRACE" additivity="false">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="stderr" level="WARN"/>
+            <AppenderRef ref="logfile"/>
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="logfile"/>
+            <AppenderRef ref="stderr" level="WARN"/>
+        </Root>
+    </Loggers>
+</Configuration>

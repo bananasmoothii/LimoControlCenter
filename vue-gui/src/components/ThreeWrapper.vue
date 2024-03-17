@@ -54,14 +54,15 @@ function initWorld() {
   light.target.position.set(0, 0, 0)
   light.castShadow = true
   light.shadow.bias = 0
-  light.shadow.mapSize.width = 5000
-  light.shadow.mapSize.height = 5000
+  light.shadow.mapSize.width = 656
+  light.shadow.mapSize.height = 656
   light.shadow.camera.near = 0.1
   light.shadow.camera.far = 200
   light.shadow.camera.left = -25
   light.shadow.camera.right = 25
   light.shadow.camera.top = 25
   light.shadow.camera.bottom = -25
+  light.shadow.radius = 8
   addSceneObject(light)
 
   // debug shadow camera

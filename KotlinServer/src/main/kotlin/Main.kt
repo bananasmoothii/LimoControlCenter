@@ -41,7 +41,8 @@ fun main() {
                 }
             }
         }
-        logger.info("hi")
+
+        // this is blocking
         Webserver.start()
     }
 }

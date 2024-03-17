@@ -3,12 +3,17 @@ package fr.bananasmoothii.limocontrolcenter.webserver
 import fr.bananasmoothii.limocontrolcenter.config
 import fr.bananasmoothii.limocontrolcenter.logger
 import fr.bananasmoothii.limocontrolcenter.webserver.plugins.configureHTTP
-import fr.bananasmoothii.limocontrolcenter.webserver.plugins.configureSerialization
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.websocket.*
 
 object Webserver {
+    /**
+     * Start the webserver. Blocking.
+     */
     fun start() {
         val host = config.webserver.host
         val port = config.webserver.port
@@ -24,6 +29,12 @@ object Webserver {
 
 private fun Application.module() {
     configureHTTP()
-    configureSerialization()
+
+    install(ContentNegotiation) {
+        json()
+    }
+
+    install(WebSockets)
+
     configureRouting()
 }

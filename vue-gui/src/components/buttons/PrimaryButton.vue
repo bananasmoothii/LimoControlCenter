@@ -5,7 +5,7 @@
     @mouseleave="mouseLeave"
     type="button"
     ref="button"
-    class="block rounded-lg bg-primary px-3 py-2.5 font-semibold text-gray-900 transition-all duration-200 ease-in-out hover:bg-primary-lighter hover:text-gray-700"
+    class="block rounded-lg bg-primary px-3 py-2.5 font-semibold text-gray-900 transition-all duration-200 ease-in-out hover:bg-primary-lighter hover:text-gray-700 min-w-20"
   >
     <slot />
   </button>

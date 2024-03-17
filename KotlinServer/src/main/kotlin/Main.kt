@@ -1,6 +1,7 @@
 package fr.bananasmoothii.limocontrolcenter
 
 import fr.bananasmoothii.limocontrolcenter.config.Config
+import fr.bananasmoothii.limocontrolcenter.redis.DataSubscribers
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
 import fr.bananasmoothii.limocontrolcenter.webserver.Webserver
 import kotlinx.coroutines.runBlocking
@@ -55,6 +56,8 @@ fun main(args: Array<String>) {
             }
             break
         }
+
+        DataSubscribers.subscribeToUpdateChannels()
 
         // this is blocking
         Webserver.start()

@@ -21,7 +21,7 @@ object RedisWrapper {
     /**
      * Use a Jedis instance from the pool, and close it after the block is executed.
      */
-    suspend fun use(block: Jedis.() -> Unit) = withContext(Dispatchers.IO) {
+    suspend fun <T> use(block: Jedis.() -> T): T = withContext(Dispatchers.IO) {
         pool.resource.use { jedis ->
             block(jedis)
         }

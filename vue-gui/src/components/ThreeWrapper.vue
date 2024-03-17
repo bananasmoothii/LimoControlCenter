@@ -41,11 +41,12 @@ function initWorld() {
   controls.maxPolarAngle = Math.PI / 2 - 0.1
   controls.minDistance = 2
   controls.maxDistance = 25
+  controls.maxTargetRadius = 20
 
   //background color
   scene.background = new THREE.Color(0xffe699)
 
-  const ambiantLight = new THREE.AmbientLight(0xaaaaaa) // soft white light
+  const ambiantLight = new THREE.AmbientLight(0xffffff)
   addSceneObject(ambiantLight)
 
   const light = new THREE.DirectionalLight(0xffffff, 1.6)

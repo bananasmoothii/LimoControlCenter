@@ -61,7 +61,9 @@ tasks.register<Exec>("buildWeb") {
     })
     outputs.dir(project.file("../vue-gui/dist"))
     workingDir = File("../vue-gui")
-    commandLine("npm" + (if ("Windows" in System.getProperty("os.name")) ".cmd" else ""), "run", "build")
+    val npmCommand = "npm" + (if ("Windows" in System.getProperty("os.name")) ".cmd" else "")
+    commandLine(npmCommand, "install")
+    commandLine(npmCommand, "run", "build")
 }
 
 tasks.register<Copy>("buildAndCopyWeb") {
@@ -75,7 +77,18 @@ tasks.register<Copy>("buildAndCopyWeb") {
 }
 
 tasks.shadowJar {
-    dependsOn("buildAndCopyWeb")
+    mustRunAfter("buildAndCopyWeb")
+}
+
+tasks.register("runEverything") {
+    dependsOn("buildAndCopyWeb", "runShadow")
+}
+
+// we are registering a new task so that the shadowJar task can still be run separately. This is useful in the Dockerfile
+// where there is a container for npm and a container for gradle, and gradle doesn't have access to npm because
+// everything is isolated.
+tasks.register("webAndServerJar") {
+    dependsOn("buildAndCopyWeb", "shadowJar")
 }
 
 tasks.test {

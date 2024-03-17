@@ -1,5 +1,6 @@
 package fr.bananasmoothii.limocontrolcenter.config
 
+import fr.bananasmoothii.limocontrolcenter.isDockerized
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,7 +20,10 @@ data class RedisConfig(
     val user: String = "default",
     val password: String? = null,
     val database: Int = 0,
-)
+) {
+    val hostOrDockerizedRedis: String
+        get() = if (isDockerized) "redis" else host
+}
 
 @Serializable
 data class WebserverConfig(

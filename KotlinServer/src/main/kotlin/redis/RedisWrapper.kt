@@ -9,7 +9,12 @@ import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPubSub
 
 object RedisWrapper {
-    private val pool = JedisPool(config.redis.host, config.redis.port, config.redis.user, config.redis.password)
+    private val pool = JedisPool(
+        config.redis.hostOrDockerizedRedis,
+        config.redis.port,
+        config.redis.user,
+        config.redis.password
+    )
 
     private var redisSubscribersNb = 0
 

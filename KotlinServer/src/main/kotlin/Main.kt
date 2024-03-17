@@ -5,6 +5,7 @@ import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
 import fr.bananasmoothii.limocontrolcenter.webserver.Webserver
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
+import redis.clients.jedis.exceptions.JedisConnectionException
 
 val logger = LogManager.getLogger("general")!!.also {
     it.info("Starting the Limo Control Center...")
@@ -12,7 +13,11 @@ val logger = LogManager.getLogger("general")!!.also {
 
 val config = Config.load()
 
-fun main() {
+var isDockerized = false
+
+fun main(args: Array<String>) {
+    isDockerized = args.contains("--dockerized")
+
     // add shutdown hook to close Redis
     Runtime.getRuntime().addShutdownHook(Thread {
         runBlocking {
@@ -21,25 +26,34 @@ fun main() {
     })
 
     runBlocking {
-        RedisWrapper.use {
-            // test Redis
-            set("limo control center test", "working!")
-            val test = get("limo control center test") ?: error("Redis is not working!")
-            logger.info("Redis test: $test")
-            del("limo control center test")
+        while (true) {
+            try {
+                RedisWrapper.use {
+                    // test Redis
+                    set("limo control center test", "working!")
+                    val test = get("limo control center test") ?: error("Redis is not working!")
+                    logger.info("Redis test: $test")
+                    del("limo control center test")
 
-            // draw a square of points
-            del("map:solid")
-            for (x in 0..10) {
-                if (x == 0 || x == 10) {
-                    for (y in 0..10) {
-                        sadd("map:solid", "$x,$y")
+                    // draw a square of points
+                    del("map:solid")
+                    for (x in 0..10) {
+                        if (x == 0 || x == 10) {
+                            for (y in 0..10) {
+                                sadd("map:solid", "$x,$y")
+                            }
+                        } else {
+                            sadd("map:solid", "$x,0")
+                            sadd("map:solid", "$x,10")
+                        }
                     }
-                } else {
-                    sadd("map:solid", "$x,0")
-                    sadd("map:solid", "$x,10")
                 }
+            } catch (e: JedisConnectionException) {
+                logger.error("Redis is not working! Retrying in 5 seconds...")
+                Thread.sleep(5000)
+                continue
             }
+            break
         }
 
         // this is blocking

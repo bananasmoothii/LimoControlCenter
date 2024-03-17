@@ -7,9 +7,9 @@ environment.
 
 1. Set up the Redis database
 
-2. Use `gradlew shadowJar` to build the jar file
+2. Use `gradlew webAndServerJar` to build the jar file
 
-   Note: on windows, use `./gradlew.bat shadowJar`
+   Note: on windows, use `./gradlew.bat webAndServerJar`
 
 3. Run the jar file once to create the configuration file and edit it to set the redis server address (and password if
    necessary)

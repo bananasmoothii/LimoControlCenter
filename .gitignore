@@ -9,6 +9,7 @@ coverage
 
 logs/
 /server-config.yml
+/KotlinServer/server-config.yml
 
 # Logs
 logs

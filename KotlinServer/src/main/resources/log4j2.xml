@@ -2,14 +2,16 @@
 <Configuration status="WARN" shutdownHook="disable">
     <Appenders>
         <Console name="stdout" target="SYSTEM_OUT">
-            <PatternLayout pattern="%highlight{%d{dd-MM-YYYY HH:mm:ss} [%-10.10t:%-9.-9c{1}] %-5level - %msg%n}" disableAnsi="false"/>
+            <PatternLayout pattern="%highlight{%d{HH:mm:ss} [%-16.16t:%-9.-9c{1}] %-5level - %msg%n}"
+                           disableAnsi="false"/>
             <Filters>
                 <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
                 <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             </Filters>
         </Console>
         <Console name="stderr" target="SYSTEM_ERR">
-            <PatternLayout pattern="%highlight{%d{dd-MM-YYYY HH:mm:ss} [%-10.10t:%-9.-9c{1}] %-5level - %msg%n}" disableAnsi="false"/>
+            <PatternLayout pattern="%highlight{%d{HH:mm:ss} [%-16.16t:%-9.-9c{1}] %-5level - %msg%n}"
+                           disableAnsi="false"/>
         </Console>
         <RollingFile name="logfile" fileName="logs/latest.log" filePattern="logs/%d{YYYY-MM-dd}-%i.log.gz">
             <PatternLayout pattern="%d{dd-MM-YYYY HH:mm:ss} [%-22.22t:%-15.-15c{1}] %-5level - %msg%n"/>

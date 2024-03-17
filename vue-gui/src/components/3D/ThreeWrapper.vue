@@ -12,6 +12,7 @@ import { Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui
 import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 
 const sceneObjects = []
 const sceneObjectsLen = ref(0)
@@ -29,7 +30,7 @@ function initWorld() {
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
   camera.position.set(0, 5, 5)
-  renderer = new THREE.WebGLRenderer()
+  renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.pixelRatio = window.devicePixelRatio
@@ -54,8 +55,8 @@ function initWorld() {
   light.target.position.set(0, 0, 0)
   light.castShadow = true
   light.shadow.bias = 0
-  light.shadow.mapSize.width = 656
-  light.shadow.mapSize.height = 656
+  light.shadow.mapSize.width = 768
+  light.shadow.mapSize.height = 768
   light.shadow.camera.near = 0.1
   light.shadow.camera.far = 200
   light.shadow.camera.left = -25
@@ -74,18 +75,18 @@ function initWorld() {
   plane.rotation.x = -Math.PI / 2
   addSceneObject(plane)
 
-  const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ color: 0x00ff00 }))
+  const cube = new THREE.Mesh(new RoundedBoxGeometry(1, 1, 1, 3, 0.1), new THREE.MeshLambertMaterial({ color: 0x00ff00 }))
   cube.castShadow = true
   cube.receiveShadow = true
   addSceneObject(cube)
 
-  const cubeX = new THREE.Mesh(new THREE.BoxGeometry(2, 0.5, 0.5), new THREE.MeshLambertMaterial({ color: 0xff0000 }))
+  const cubeX = new THREE.Mesh(new RoundedBoxGeometry(2, 0.5, 0.5, 3, 0.1), new THREE.MeshLambertMaterial({ color: 0xff0000 }))
   cubeX.position.x = 2
   cubeX.castShadow = true
   cubeX.receiveShadow = true
   addSceneObject(cubeX)
 
-  const cubeY = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2, 0.5), new THREE.MeshLambertMaterial({ color: 0x0000ff }))
+  const cubeY = new THREE.Mesh(new RoundedBoxGeometry(0.5, 2, 0.5, 3, 0.1), new THREE.MeshLambertMaterial({ color: 0x0000ff }))
   cubeY.position.y = 2
   cubeY.castShadow = true
   cubeY.receiveShadow = true

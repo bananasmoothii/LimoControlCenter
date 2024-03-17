@@ -18,7 +18,7 @@ object Webserver {
             host = host,
             port = port,
             module = Application::module
-        ).start(wait = false)
+        ).start(wait = true)
     }
 }
 

@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import ThreeWrapper from '@/components/ThreeWrapper.vue'
+import ThreeWrapper from '@/components/3D/ThreeWrapper.vue'
 import { defineComponent } from 'vue'
 
 export default defineComponent({

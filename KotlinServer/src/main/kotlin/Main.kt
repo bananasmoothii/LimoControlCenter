@@ -2,6 +2,7 @@ package fr.bananasmoothii.limocontrolcenter
 
 import fr.bananasmoothii.limocontrolcenter.config.Config
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
+import fr.bananasmoothii.limocontrolcenter.webserver.Webserver
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 
@@ -40,6 +41,8 @@ fun main() {
                 }
             }
         }
+        logger.info("hi")
+        Webserver.start()
     }
 }
 

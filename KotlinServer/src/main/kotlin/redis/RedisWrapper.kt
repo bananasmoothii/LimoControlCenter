@@ -1,7 +1,7 @@
 package fr.bananasmoothii.limocontrolcenter.redis
 
-import fr.bananasmoothii.limocontrolcenter.logger
 import fr.bananasmoothii.limocontrolcenter.config
+import fr.bananasmoothii.limocontrolcenter.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import redis.clients.jedis.Jedis
@@ -47,7 +47,7 @@ object RedisWrapper {
     }
 
     fun shutdown() {
-        logger.info("Shutting down Redis...")
+        logger.info("Shutting down Redis connection...")
         pool.close()
     }
 }

@@ -12,7 +12,7 @@ group = "fr.bananasmoothii.limocontrolcenter"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("fr.bananasmoothii.limocontrolcenter.MainKt")
+    mainClass.set("$group.MainKt")
 }
 
 repositories {
@@ -50,10 +50,34 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.9.23")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 kotlin {
     jvmToolchain(17)
+}
+
+tasks.register<Exec>("buildWeb") {
+    inputs.files(project.fileTree("../vue-gui") {
+        exclude("node_modules/**", "dist/**")
+    })
+    outputs.dir(project.file("../vue-gui/dist"))
+    workingDir = File("../vue-gui")
+    commandLine("npm" + (if ("Windows" in System.getProperty("os.name")) ".cmd" else ""), "run", "build")
+}
+
+tasks.register<Copy>("buildAndCopyWeb") {
+    dependsOn("buildWeb")
+    val target = layout.buildDirectory.dir("resources/main/webstatic").get()
+    doFirst {
+        println("Copying files from vue-gui/dist to $target")
+    }
+    from("$projectDir/../vue-gui/dist")
+    into(target)
+}
+
+tasks.shadowJar {
+    dependsOn("buildAndCopyWeb")
+}
+
+tasks.test {
+    mustRunAfter("buildAndCopyWeb")
+    useJUnitPlatform()
 }

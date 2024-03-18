@@ -45,6 +45,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-server-websockets:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
 
     // Tests
@@ -78,6 +79,17 @@ tasks.register<Copy>("buildAndCopyWeb") {
 
 tasks.shadowJar {
     mustRunAfter("buildAndCopyWeb")
+    doFirst {
+        val webStaticDir = layout.buildDirectory.dir("resources/main/webstatic").get()
+        if (!webStaticDir.asFile.exists()) {
+            throw IllegalStateException(
+                "The webstatic directory doesn't exist. Run the buildAndCopyWeb task first, " +
+                        "or manually compile the npm project and copy the files from dist/ to " +
+                        webStaticDir.asFile.absolutePath
+            )
+
+        }
+    }
 }
 
 tasks.register("runEverything") {

@@ -6,3 +6,5 @@ services:
   redis:
     image: "redis:latest"
     hostname: redis
+    ports:
+      - "6379:6379"

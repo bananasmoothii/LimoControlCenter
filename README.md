@@ -3,37 +3,59 @@
 The Limo Control Center is a web application that allows you to control the Limo robot in a 3D map of the scanned
 environment.
 
-## How to use
+## Requirements
 
-1. Set up the Redis database
+* A **Redis database** is required to store the robot's position and the map. You will be able to configure host, port,
+  username and password in the configuration file.
+* Java 17
+* Node.js 17 or later with npm
 
-2. Use `gradlew webAndServerJar` to build the jar file (in the `KotlinServer` directory)
+## How build / use
 
-   Note: on windows, use `./gradlew.bat webAndServerJar`
+Once everything above is set up, you can run:
 
-3. Run the jar file (located in `KotlinServer/build/libs`) once to create the configuration file and edit it to set the
-   redis server address and password if necessary
+#### Directly run the server from the command line
 
-4. Run the jar file again to start the server
+```shell
+cd KotlinServer
+./gradlew runEverything
+```
 
-You can also use `gradlew runEverything` to start the server directly from the command line instead of using the jar
-file.
+#### Build a jar file
+
+```shell
+cd KotlinServer
+./gradlew webAndServerJar
+```
+
+The jar file will be located in `KotlinServer/build/libs`.
+
+#### Run the jar file
+
+To run fat jar ("fat" because it contains everything: dependencies and web files), you only need the Redis database and
+Java 17 or later.
+
+```shell
+java -jar path/to/jarfile.jar
+```
 
 ## VueJs GUI (vue-gui)
 
-This template should help get you started developing with Vue 3 in Vite.
+If you want to run the GUI alone, you can do so by following the instructions below.
 
 ### Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-Personnaly I just use IntelliJ IDEA with the Vue.js plugin.
+Personnaly I just use IntelliJ IDEA with the Vue.js plugin, it works very well.
 
 **Type Support for `.vue` Imports in TS**: TypeScript cannot handle type information for `.vue` imports by default, so 
 we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript 
 language service aware of `.vue` types.
 
 ### Project Setup for the GUI alone
+
+#### Install Dependencies
 
 ```sh
 npm install
@@ -49,10 +71,4 @@ npm run dev
 
 ```sh
 npm run build
-```
-
-#### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
 ```

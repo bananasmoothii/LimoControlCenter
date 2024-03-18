@@ -12,7 +12,10 @@ environment.
 
 ## How build / use
 
-Once everything above is set up, you can run:
+Note that there is a `compose.yml` file for Docker Compose, but it doesn't work yet, for exemple I still have issues
+forwarding the Redis port to the server. Help is welcome.
+
+Once everything above is set up, you can:
 
 #### Directly run the server from the command line
 

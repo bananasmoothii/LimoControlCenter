@@ -44,7 +44,7 @@ fun Application.configureRouting() {
 //        }
 
         webSocket("/ws/map/solid") {
-            DataSubscribers.updateMapSolidSubscribers[this] = { mapPointsDiff ->
+            DataSubscribers.subscribeAllRobotsUpdateMapSolid(this) { mapPointsDiff ->
                 send(webSocketMapPointDiff(mapPointsDiff.first, mapPointsDiff.second))
             }
 
@@ -60,7 +60,7 @@ fun Application.configureRouting() {
                     }
                 }
             } finally {
-                DataSubscribers.updateMapSolidSubscribers.remove(this)
+                DataSubscribers.unsubscribeAllRobotsUpdateMapSolid(this)
             }
         }
 

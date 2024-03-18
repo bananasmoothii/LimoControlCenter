@@ -57,7 +57,7 @@ fun main(args: Array<String>) {
             break
         }
 
-        DataSubscribers.subscribeToUpdateChannels()
+        DataSubscribers.init()
 
         // this is blocking
         Webserver.start()

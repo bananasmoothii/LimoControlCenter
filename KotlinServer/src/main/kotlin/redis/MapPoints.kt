@@ -1,15 +1,13 @@
 package fr.bananasmoothii.limocontrolcenter.redis
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 object MapPoints {
-    private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+//    private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun saveMapPointDiffNonBlock(mapPointsDiff: MapPointsDiff) {
-        ioScope.launch {
+    fun CoroutineScope.launchSaveMapPointDiff(mapPointsDiff: MapPointsDiff) {
+        launch {
             RedisWrapper.use {
                 val (pointsToAdd, pointsToRemove) = mapPointsDiff
                 if (pointsToAdd != null) {

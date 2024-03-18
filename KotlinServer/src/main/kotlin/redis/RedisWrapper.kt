@@ -9,14 +9,20 @@ import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPubSub
 
 object RedisWrapper {
-    private val pool = JedisPool(
-        config.redis.hostOrDockerizedRedis,
-        config.redis.port,
-        config.redis.user,
-        config.redis.password
-    )
+    private val pool: JedisPool
 
     private var redisSubscribersNb = 0
+
+    init {
+        val redis = config.redis
+        logger.info("Connecting to Redis on ${redis.hostOrDockerizedRedis}:${redis.port}...")
+        pool = JedisPool(
+            redis.hostOrDockerizedRedis,
+            redis.port,
+            redis.user,
+            redis.password
+        )
+    }
 
     /**
      * Use a Jedis instance from the pool, and close it after the block is executed.
@@ -30,7 +36,7 @@ object RedisWrapper {
     /**
      * Subscribe to a Redis channel. Non-blocking.
      */
-    fun subscribe(vararg channels: String, jedisPubSub: JedisPubSub) {
+    fun subscribe(jedisPubSub: JedisPubSub, vararg channels: String) {
         val subscriber = object : Thread("RedisSub-${++redisSubscribersNb}") {
             override fun run() {
                 val jedis = pool.resource
@@ -44,11 +50,11 @@ object RedisWrapper {
      * Subscribe to a Redis channel. Non-blocking.
      */
     fun subscribe(vararg channels: String, callback: (channel: String, message: String) -> Unit) {
-        subscribe(*channels, jedisPubSub = object : JedisPubSub() {
+        subscribe(object : JedisPubSub() {
             override fun onMessage(channel: String, message: String) {
                 callback(channel, message)
             }
-        })
+        }, *channels)
     }
 
     fun shutdown() {

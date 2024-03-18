@@ -2,38 +2,65 @@ package fr.bananasmoothii.limocontrolcenter.redis
 
 import fr.bananasmoothii.limocontrolcenter.logger
 import kotlinx.coroutines.*
+import redis.clients.jedis.JedisPubSub
 
 typealias MapPointsDiff = Pair<Set<String>?, Set<String>?>
 
 object DataSubscribers {
 
+    /**
+     * map of robotId to a pair of last keep-alive timestamp and JedisPubSubs
+     */
+    val robots = mutableMapOf<String, Pair<Long, MutableList<JedisPubSub>>>()
+
     val updateMapSolidSubscribers = mutableMapOf<Any, suspend (mapPointsDiff: MapPointsDiff) -> Unit>()
 
-    private val addPointsFromSubscribeToSetScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    init {
+        ioScope.launch {
+            while (true) {
+                filterRobots()
+                delay(1000)
+            }
+        }
+    }
 
     fun subscribeToUpdateChannels() {
-        RedisWrapper.subscribe("update:map:solid") { channel, message ->
-            try {
-                val mapPointsDiff = deserializeMapPointsDiff(message)
-                updateMapSolidSubscribers.notifyAllSubscribers(mapPointsDiff)
+        RedisWrapper.subscribe("general") { _, message ->
+            logger.debug("Received message on channel general: $message")
+            val (command, param) = message.split(' ', limit = 2)
 
-                addPointsFromSubscribeToSetScope.launch {
-                    RedisWrapper.use {
-                        val (pointsToAdd, pointsToRemove) = mapPointsDiff
-                        if (pointsToAdd != null) {
-                            for (point in pointsToAdd) {
-                                sadd("map:solid", point)
+            when (command) {
+                "keep_alive" -> {
+                    val robotId = param
+
+                    val previous = robots.put(robotId, System.currentTimeMillis() to mutableListOf())
+                    if (previous == null) {
+                        logger.info("New robot connected: $robotId")
+
+                        ioScope.launch {
+                            RedisWrapper.use {
+                                this.sadd("robots", robotId)
                             }
                         }
-                        if (pointsToRemove != null) {
-                            for (point in pointsToRemove) {
-                                srem("map:solid", point)
+
+                        val solidMapPointsSubscriber = object : JedisPubSub() {
+                            override fun onMessage(channel: String, message: String) {
+                                try {
+                                    val mapPointsDiff = deserializeMapPointsDiff(message)
+                                    updateMapSolidSubscribers.notifyAllSubscribers(mapPointsDiff)
+
+                                    MapPoints.saveMapPointDiffNonBlock(mapPointsDiff)
+                                } catch (e: IllegalArgumentException) {
+                                    logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
+                                }
                             }
                         }
+
+                        RedisWrapper.subscribe(solidMapPointsSubscriber, "update:map:solid $robotId")
                     }
                 }
-            } catch (e: IllegalArgumentException) {
-                logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
             }
         }
     }
@@ -79,5 +106,18 @@ object DataSubscribers {
         val add = if (addStr.isEmpty()) null else addStr.splitToSequence(' ').toSet()
         val remove = if (removeStr.isEmpty()) null else removeStr.splitToSequence(' ').toSet()
         return add to remove
+    }
+
+    private suspend fun filterRobots() {
+        val now = System.currentTimeMillis()
+        val toRemove = robots.filter { it.value.first < now - 10000 }.keys
+        RedisWrapper.use {
+            for (robot in toRemove) {
+                logger.info("Robot $robot disconnected (no keep-alive received for 10 seconds)")
+                robots.remove(robot)
+
+                srem("robots", robot)
+            }
+        }
     }
 }

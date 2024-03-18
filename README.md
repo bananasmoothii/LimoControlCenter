@@ -7,15 +7,17 @@ environment.
 
 1. Set up the Redis database
 
-2. Use `gradlew webAndServerJar` to build the jar file
+2. Use `gradlew webAndServerJar` to build the jar file (in the `KotlinServer` directory)
 
    Note: on windows, use `./gradlew.bat webAndServerJar`
 
-3. Run the jar file once to create the configuration file and edit it to set the redis server address (and password if
-   necessary)
+3. Run the jar file (located in `KotlinServer/build/libs`) once to create the configuration file and edit it to set the
+   redis server address and password if necessary
 
 4. Run the jar file again to start the server
 
+You can also use `gradlew runEverything` to start the server directly from the command line instead of using the jar
+file.
 
 ## VueJs GUI (vue-gui)
 

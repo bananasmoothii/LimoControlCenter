@@ -8,6 +8,7 @@
 <script lang="js">
 import { defineComponent, ref } from 'vue'
 import * as THREE from 'three'
+import { BoxGeometry } from 'three'
 import { Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui/vue'
 import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
@@ -117,6 +118,8 @@ export default defineComponent({
     controls.addEventListener('end', () => this.isGrabbing = false)
 
     this.animate()
+
+    this.webSocketsStuff()
   },
   unmounted() {
     if (!this.isWebGLAvailable) return
@@ -144,6 +147,60 @@ export default defineComponent({
       controls.update()
 
       renderer.render(scene, camera)
+    },
+    webSocketsStuff() {
+      const host = window.location.host
+      const mapSolidSocket = new WebSocket(`ws://${host}/ws/map/solid`)
+
+      mapSolidSocket.addEventListener('open', () => {
+        console.log('mapSolidSocket connected')
+        mapSolidSocket.send('sendall')
+      })
+
+      mapSolidSocket.addEventListener('message', (event) => {
+        const deserialized = this.deserializeMapPointsDiff(event.data)
+        console.log('mapSolidSocket message', deserialized)
+
+        if (deserialized.remove) {
+          for (const point of deserialized.remove) {
+            const cube = scene.getObjectByName(`${point.x},${point.y},${point.z}`)
+            if (cube) {
+              scene.remove(cube)
+            } else {
+              console.warn('cube not found', point)
+            }
+          }
+        }
+        if (deserialized.add) {
+          for (const point of deserialized.add) {
+            const cube = new THREE.Mesh(new BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshLambertMaterial({ color: 0xffffff }))
+
+            // Warning: the y and z are swapped because of the coordinate system
+            cube.position.set(point.x, point.z, point.y)
+            cube.castShadow = true
+            cube.receiveShadow = true
+            if (scene.getObjectByName(`${point.x},${point.y},${point.z}`) !== undefined) {
+              console.warn('cube already exists', point)
+            }
+            cube.name = `${point.x},${point.y},${point.z}`
+            scene.add(cube)
+          }
+        }
+      })
+    },
+    deserializeMapPointsDiff(serialized) {
+      const [addStr, removeStr] = serialized.split('/', 2)
+      const add = addStr ? addStr.split(' ') : null
+      if (add && add[add.length - 1] === '') add.pop()
+      const remove = removeStr ? removeStr.split(' ') : null
+      if (remove && remove[remove.length - 1] === '') remove.pop()
+
+      function toObject(element) {
+        const [x, y, z] = element.split(',')
+        return { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z) }
+      }
+
+      return { add: add && add.map(toObject), remove: remove && remove.map(toObject) }
     }
   }
 })

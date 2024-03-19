@@ -36,16 +36,17 @@ fun main(args: Array<String>) {
                     logger.info("Redis test: $test")
                     del("limo control center test")
 
-                    // draw a square of points
+                    // draw a square of points // TODO: remove this
+                    val squareSize = 0.2
                     del("map:solid")
                     for (x in 0..10) {
                         if (x == 0 || x == 10) {
                             for (y in 0..10) {
-                                sadd("map:solid", "$x,$y")
+                                sadd("map:solid", "${x * squareSize},${y * squareSize}")
                             }
                         } else {
-                            sadd("map:solid", "$x,0")
-                            sadd("map:solid", "$x,10")
+                            sadd("map:solid", "${x * squareSize},0")
+                            sadd("map:solid", "${x * squareSize},${10 * squareSize}")
                         }
                     }
                 }

@@ -8,13 +8,18 @@
 <script lang="js">
 import { defineComponent } from 'vue'
 import * as THREE from 'three'
-import { BoxGeometry } from 'three'
 import { Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui/vue'
 import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
+import * as map_utils from './map_utils.ts'
 
 var scene, camera, renderer, controls
+
+/**
+ * @type {map_utils.Point2DGroups}
+ */
+const map2DPointsGroups = {}
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
@@ -121,29 +126,6 @@ export default defineComponent({
 
       renderer.render(scene, camera)
     },
-    serializeStringPoint(point) {
-      if (point.z) return `${point.x},${point.y},${point.z}`
-      return `${point.x},${point.y}`
-    },
-    deserializeStringPoint(serialized) {
-      const splitted = serialized.split(',')
-      return {
-        x: parseFloat(splitted[0]),
-        y: parseFloat(splitted[1]),
-        z: splitted.length === 3 ? parseFloat(splitted[2]) : undefined
-      }
-    },
-    pointToCube: function(point) {
-      let pointIs2D = point.z === undefined
-
-      const cube = new THREE.Mesh(new BoxGeometry(0.2, pointIs2D ? 1.2 : 0.2, 0.2), new THREE.MeshLambertMaterial({ color: 0xffffff }))
-
-      // Warning: the y and z are swapped because of the coordinate system
-      cube.position.set(point.x, pointIs2D ? 0.6 : point.z, point.y)
-      cube.castShadow = true
-      cube.receiveShadow = true
-      return cube
-    },
     webSocketsStuff() {
       const host = window.location.host
       const mapSolidSocket = new WebSocket(`ws://${host}/ws/map/solid`)
@@ -154,46 +136,11 @@ export default defineComponent({
       })
 
       mapSolidSocket.addEventListener('message', (event) => {
-        const deserialized = this.deserializeMapPointsDiff(event.data)
-        console.log('mapSolidSocket message', deserialized)
+        console.log('mapSolidSocket message', event.data)
 
-        if (deserialized.remove) {
-          for (const point of deserialized.remove) {
-            let deserializedPoint = this.serializeStringPoint(point)
-            const cube = scene.getObjectByName(deserializedPoint)
-            if (cube) {
-              scene.remove(cube)
-            } else {
-              console.warn('cube not found', point)
-            }
-          }
-        }
-        if (deserialized.add) {
-          for (const point of deserialized.add) {
-            const cube = this.pointToCube(point)
-
-            let deserializedPoint = this.serializeStringPoint(point)
-            if (scene.getObjectByName(deserializedPoint) !== undefined) {
-              console.warn('cube already exists', point)
-            }
-            cube.name = deserializedPoint
-            scene.add(cube)
-          }
-        }
+        map_utils.handleMapPointDiff(event.data, map2DPointsGroups, scene)
       })
     },
-    deserializeMapPointsDiff(serialized) {
-      const [addStr, removeStr] = serialized.split('/', 2)
-      const add = addStr ? addStr.split(' ') : null
-      if (add && add[add.length - 1] === '') add.pop()
-      const remove = removeStr ? removeStr.split(' ') : null
-      if (remove && remove[remove.length - 1] === '') remove.pop()
-
-      return {
-        add: add && add.map(point => this.deserializeStringPoint(point)),
-        remove: remove && remove.map(point => this.deserializeStringPoint(point))
-      }
-    }
   }
 })
 </script>

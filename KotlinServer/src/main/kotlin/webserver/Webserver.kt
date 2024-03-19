@@ -10,6 +10,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.websocket.*
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
 object Webserver {
@@ -39,7 +40,8 @@ private fun Application.module() {
     install(WebSockets)
 
     install(CallLogging) {
-        level = Level.INFO
+        level = Level.DEBUG
+        this.logger = LoggerFactory.getLogger("call-log")!!
     }
 
     configureRouting()

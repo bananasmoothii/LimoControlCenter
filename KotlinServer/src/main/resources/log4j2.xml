@@ -27,6 +27,11 @@
             <AppenderRef ref="stderr" level="WARN"/>
             <AppenderRef ref="logfile"/>
         </Logger>
+        <Logger name="call-log" level="TRACE" additivity="false">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="stderr" level="WARN"/>
+            <AppenderRef ref="logfile"/>
+        </Logger>
         <Root level="INFO">
             <AppenderRef ref="stdout"/>
             <AppenderRef ref="logfile"/>

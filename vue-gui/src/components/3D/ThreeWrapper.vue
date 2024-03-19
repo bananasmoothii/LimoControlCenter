@@ -128,7 +128,8 @@ export default defineComponent({
       renderer.render(scene, camera)
     },
     webSocketsStuff() {
-      const host = 'localhost' // window.location.host
+      const host = process.env.NODE_ENV === 'development' ? window.location.host.split(':')[0] : window.location.host
+      console.log(`using host '${host}' as websocket host`)
       const mapSolidSocket = new WebSocket(`ws://${host}/ws/map/solid`)
 
       mapSolidSocket.addEventListener('open', () => {

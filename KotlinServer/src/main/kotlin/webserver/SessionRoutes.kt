@@ -15,7 +15,7 @@ import io.ktor.websocket.*
  * Translates two lists of points (added and removed) to a WebSocket frame.
  */
 private fun webSocketMapPointDiff(pointsToAdd: Collection<String>?, pointsToRemove: Collection<String>?): Frame {
-    val builder = DataSubscribers.serializeMapPointsDiff(pointsToAdd, pointsToRemove, addZCoord = true)
+    val builder = DataSubscribers.serializeMapPointsDiff(pointsToAdd, pointsToRemove)
     return Frame.Text(builder)
 }
 
@@ -29,19 +29,6 @@ fun Application.configureRouting() {
         get("/api/test") {
             call.respondText("Hello World!")
         }
-
-//        webSocket("/echo") {
-//            send("Please enter your name")
-//            for (frame in incoming) {
-//                frame as? Frame.Text ?: continue
-//                val receivedText = frame.readText()
-//                if (receivedText.equals("bye", ignoreCase = true)) {
-//                    close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
-//                } else {
-//                    send(Frame.Text("Hi, $receivedText!"))
-//                }
-//            }
-//        }
 
         webSocket("/ws/map/solid") {
             DataSubscribers.subscribeAllRobotsUpdateMapSolid(this) { mapPointsDiff ->

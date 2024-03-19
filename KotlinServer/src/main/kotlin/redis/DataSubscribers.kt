@@ -80,7 +80,6 @@ object DataSubscribers {
         if (pointsToAdd != null) {
             for (point in pointsToAdd) {
                 builder.append(point)
-                if (point.count { it == ',' } <= 2 && addZCoord) builder.append(",0.1")
                 builder.append(' ')
             }
         }
@@ -88,7 +87,6 @@ object DataSubscribers {
         if (pointsToRemove != null) {
             for (point in pointsToRemove) {
                 builder.append(point)
-                if (point.count { it == ',' } <= 2 && addZCoord) builder.append(",0.1")
                 builder.append(' ')
             }
         }

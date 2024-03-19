@@ -121,6 +121,29 @@ export default defineComponent({
 
       renderer.render(scene, camera)
     },
+    serializeStringPoint(point) {
+      if (point.z) return `${point.x},${point.y},${point.z}`
+      return `${point.x},${point.y}`
+    },
+    deserializeStringPoint(serialized) {
+      const splitted = serialized.split(',')
+      return {
+        x: parseFloat(splitted[0]),
+        y: parseFloat(splitted[1]),
+        z: splitted.length === 3 ? parseFloat(splitted[2]) : undefined
+      }
+    },
+    pointToCube: function(point) {
+      let pointIs2D = point.z === undefined
+
+      const cube = new THREE.Mesh(new BoxGeometry(0.2, pointIs2D ? 1.2 : 0.2, 0.2), new THREE.MeshLambertMaterial({ color: 0xffffff }))
+
+      // Warning: the y and z are swapped because of the coordinate system
+      cube.position.set(point.x, pointIs2D ? 0.6 : point.z, point.y)
+      cube.castShadow = true
+      cube.receiveShadow = true
+      return cube
+    },
     webSocketsStuff() {
       const host = window.location.host
       const mapSolidSocket = new WebSocket(`ws://${host}/ws/map/solid`)
@@ -136,7 +159,8 @@ export default defineComponent({
 
         if (deserialized.remove) {
           for (const point of deserialized.remove) {
-            const cube = scene.getObjectByName(`${point.x},${point.y},${point.z}`)
+            let deserializedPoint = this.serializeStringPoint(point)
+            const cube = scene.getObjectByName(deserializedPoint)
             if (cube) {
               scene.remove(cube)
             } else {
@@ -146,16 +170,13 @@ export default defineComponent({
         }
         if (deserialized.add) {
           for (const point of deserialized.add) {
-            const cube = new THREE.Mesh(new BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshLambertMaterial({ color: 0xffffff }))
+            const cube = this.pointToCube(point)
 
-            // Warning: the y and z are swapped because of the coordinate system
-            cube.position.set(point.x, point.z, point.y)
-            cube.castShadow = true
-            cube.receiveShadow = true
-            if (scene.getObjectByName(`${point.x},${point.y},${point.z}`) !== undefined) {
+            let deserializedPoint = this.serializeStringPoint(point)
+            if (scene.getObjectByName(deserializedPoint) !== undefined) {
               console.warn('cube already exists', point)
             }
-            cube.name = `${point.x},${point.y},${point.z}`
+            cube.name = deserializedPoint
             scene.add(cube)
           }
         }
@@ -168,12 +189,10 @@ export default defineComponent({
       const remove = removeStr ? removeStr.split(' ') : null
       if (remove && remove[remove.length - 1] === '') remove.pop()
 
-      function toObject(element) {
-        const [x, y, z] = element.split(',')
-        return { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z) }
+      return {
+        add: add && add.map(point => this.deserializeStringPoint(point)),
+        remove: remove && remove.map(point => this.deserializeStringPoint(point))
       }
-
-      return { add: add && add.map(toObject), remove: remove && remove.map(toObject) }
     }
   }
 })

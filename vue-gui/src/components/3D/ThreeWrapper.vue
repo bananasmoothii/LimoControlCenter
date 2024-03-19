@@ -17,9 +17,9 @@ import * as map_utils from './map_utils.ts'
 var scene, camera, renderer, controls
 
 /**
- * @type {map_utils.Point2DGroups}
+ * @type {map_utils.Point2D[]}
  */
-const map2DPointsGroups = {}
+const map2DPointsGroups = []
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
@@ -28,7 +28,7 @@ function initWorld() {
   camera.position.set(0, 5, 5)
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.shadowMap.type = THREE.VSMShadowMap
   renderer.pixelRatio = window.devicePixelRatio
 
   // controls: see https://threejs.org/docs/#examples/en/controls/MapControls
@@ -50,7 +50,7 @@ function initWorld() {
   light.position.set(12, 41, 12)
   light.target.position.set(0, 0, 0)
   light.castShadow = true
-  light.shadow.bias = 0
+  light.shadow.bias = -0.0001
   light.shadow.mapSize.width = 768
   light.shadow.mapSize.height = 768
   light.shadow.camera.near = 0.1
@@ -59,7 +59,8 @@ function initWorld() {
   light.shadow.camera.right = 25
   light.shadow.camera.top = 25
   light.shadow.camera.bottom = -25
-  light.shadow.radius = 8
+  light.shadow.radius = 2
+  light.shadow.blurSamples = 6
   scene.add(light)
 
   // debug shadow camera
@@ -127,7 +128,7 @@ export default defineComponent({
       renderer.render(scene, camera)
     },
     webSocketsStuff() {
-      const host = window.location.host
+      const host = 'localhost' // window.location.host
       const mapSolidSocket = new WebSocket(`ws://${host}/ws/map/solid`)
 
       mapSolidSocket.addEventListener('open', () => {

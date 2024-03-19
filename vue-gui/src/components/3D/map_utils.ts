@@ -15,10 +15,6 @@ export type Point = {
   z?: number
 }
 
-export type Point2DGroups = {
-  [key: string]: Point2D[]
-}
-
 export function is2DPoint(point: Point): point is Point2D {
   return point.z === undefined
 }
@@ -36,7 +32,7 @@ export function separate2DAnd3DPoints(points: Point[]): { D2: Point2D[], D3: Poi
   return { D2, D3 }
 }
 
-export function handleMapPointDiff(diff: string, map2DPointsGroups: Point2DGroups, scene: THREE.Scene) {
+export function handleMapPointDiff(diff: string, map2DPoints: Point2D[], scene: THREE.Scene) {
   const { add, remove } = deserializeMapPointsDiff(diff)
 
   const separateAdd = separate2DAnd3DPoints(add || [])
@@ -63,25 +59,28 @@ export function handleMapPointDiff(diff: string, map2DPointsGroups: Point2DGroup
   }
 
   // 2D points
-  const groupModifications: GroupModifications = { changedGroups: new Set(), removedGroups: new Set() }
-  if (separateAdd2D || separateRemove2D) { // do nothing if remove is empty / null
-    for (const remove2D of separateRemove2D) {
-      removePointFromGroupOfConnectedPoints(remove2D, map2DPointsGroups, groupModifications)
-    }
-    for (const add2D of separateAdd2D) {
-      addPointToGroupOfConnectedPoints(add2D, map2DPointsGroups, groupModifications)
-    }
+  if (separateAdd2D || separateRemove2D) { // do nothing if 2D points are empty / null
+    // for (const groupId of groupModifications.removedGroups) {
+    //   scene.getObjectByName(groupId)?.removeFromParent()
+    // }
+    // for (const groupId of groupModifications.changedGroups) {
+    //   scene.getObjectByName(groupId)?.removeFromParent()
+    //   const points = map2DPointsGroups[groupId]
+    //   const mesh = mapPointGroupToMesh(points)
+    //   mesh.name = groupId
+    //   scene.add(mesh)
+    // }
 
-    for (const groupId of groupModifications.removedGroups) {
-      scene.getObjectByName(groupId)?.removeFromParent()
+    for (const point of separateRemove2D) {
+      removeAll(map2DPoints, (p) => p.x === point.x && p.y === point.y)
     }
-    for (const groupId of groupModifications.changedGroups) {
-      scene.getObjectByName(groupId)?.removeFromParent()
-      const points = map2DPointsGroups[groupId]
-      const mesh = mapPointGroupToMesh(points)
-      mesh.name = groupId
-      scene.add(mesh)
+    for (const point of separateAdd2D) {
+      map2DPoints.push(point)
     }
+    scene.getObjectByName('2D wall points')?.removeFromParent()
+    const mesh = mapPointGroupToMesh(map2DPoints)
+    mesh.name = '2D wall points'
+    scene.add(mesh)
   }
 }
 
@@ -146,50 +145,8 @@ export function removeAll<T>(array: Array<T>, predicate: (value: T, index: numbe
   }
 }
 
-type GroupModifications = { changedGroups: Set<string>; removedGroups: Set<string> }
-
-function removePointFromGroupOfConnectedPoints(
-  currentPoint: Point2D,
-  connectedPoints: Point2DGroups,
-  groupModifications: GroupModifications
-) {
-  for (const [groupId, points] of Object.entries(connectedPoints)) {
-    let hasGroupChanged = false
-    removeAll(points, (point) => {
-      const hasSameCoords = point.x === currentPoint.x && point.y === currentPoint.y
-      if (hasSameCoords) hasGroupChanged = true
-      return hasSameCoords
-    })
-    if (hasGroupChanged) {
-      if (points.length === 0) groupModifications.removedGroups.add(groupId)
-      else groupModifications.changedGroups.add(groupId)
-    }
-  }
-}
-
-function addPointToGroupOfConnectedPoints(
-  currentPoint: Point2D,
-  connectedPoints: Point2DGroups,
-  groupModifications: GroupModifications
-) {
-  for (const [groupId, points] of Object.entries(connectedPoints)) {
-    for (const point of points) {
-      if (Math.abs(currentPoint.x - point.x) <= CUBE_SIZE + 1e-4 && Math.abs(currentPoint.y - point.y) <= CUBE_SIZE + 1e-4) {
-        points.push(currentPoint)
-        groupModifications.changedGroups.add(groupId)
-
-        return
-      }
-    }
-  }
-  // point not found in any group, create a new group
-  const groupId = `2d point group ${currentPoint.x},${currentPoint.y}`
-  connectedPoints[groupId] = [currentPoint]
-  groupModifications.changedGroups.add(groupId)
-}
-
 function mapPointGroupToMesh(points: Point2D[]): THREE.Mesh {
-  const material = new THREE.MeshLambertMaterial({ color: Math.random() * 16777215 })
+  const material = new THREE.MeshLambertMaterial({ color: 0xffffff })
   const geometries = points.map((point) => {
     const cube = new THREE.BoxGeometry(CUBE_SIZE, 1.2, CUBE_SIZE)
     cube.translate(point.x, 0.6, point.y)
@@ -201,3 +158,44 @@ function mapPointGroupToMesh(points: Point2D[]): THREE.Mesh {
   mesh.receiveShadow = true
   return mesh
 }
+
+// const BEZIER_POINTS_DISTANCE = 0.3
+//
+// type BezierCurve = {
+//   xFrom: number
+//   yFrom: number
+//   xPoint1: number
+//   yPoint1: number
+//   xPoint2: number
+//   yPoint2: number
+//   xTo: number
+//   yTo: number
+// }
+
+// function mapPointsToShape(points: Point2D[]): THREE.Shape {
+//   const shape = new THREE.Shape()
+//   // const bezierCurves: BezierCurve[] = []
+//   //
+//   // let minX = Infinity
+//   // let minY = Infinity
+//   // let maxX = -Infinity
+//   // let maxY = -Infinity
+//   // for (const point of points) {
+//   //   if (point.x < minX) minX = point.x
+//   //   if (point.y < minY) minY = point.y
+//   //   if (point.x > maxX) maxX = point.x
+//   //   if (point.y > maxY) maxY = point.y
+//   // }
+//
+//   let halfCubeSize = CUBE_SIZE / 2
+//   for (const square of points) {
+//     shape.moveTo(square.x - halfCubeSize, square.y - halfCubeSize)
+//     shape.lineTo(square.x + halfCubeSize, square.y - halfCubeSize)
+//     shape.lineTo(square.x + halfCubeSize, square.y + halfCubeSize)
+//     shape.lineTo(square.x - halfCubeSize, square.y + halfCubeSize)
+//   }
+//   shape.autoClose = true
+//
+//   return shape
+// }
+

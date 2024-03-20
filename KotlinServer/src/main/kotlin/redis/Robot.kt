@@ -2,14 +2,13 @@ package fr.bananasmoothii.limocontrolcenter.redis
 
 import fr.bananasmoothii.limocontrolcenter.logger
 import fr.bananasmoothii.limocontrolcenter.redis.MapPoints.launchSaveMapPointDiff
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import redis.clients.jedis.JedisPubSub
 
-class Robot(val id: String) : CoroutineScope {
-    override val coroutineContext = Dispatchers.IO
+class Robot(val id: String) {
+    // we add SupervisorJob to the scope to avoid cancelling the whole scope when one of the jobs fails (the class
+    // instance does not become invalid if one of the jobs fails)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     var lastReceivedKeepAlive: Long = 0
 
@@ -25,7 +24,7 @@ class Robot(val id: String) : CoroutineScope {
                     val mapPointsDiff = DataSubscribers.deserializeMapPointsDiff(message)
                     notifyAllMapSolidSubscribers(mapPointsDiff)
 
-                    launchSaveMapPointDiff(mapPointsDiff)
+                    scope.launchSaveMapPointDiff(mapPointsDiff)
 
                 } catch (e: IllegalArgumentException) {
                     logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
@@ -60,6 +59,8 @@ class Robot(val id: String) : CoroutineScope {
         for (subscriber in jedisSubscribers) {
             subscriber.unsubscribe()
         }
+
+        scope.cancel()
     }
 
     companion object {

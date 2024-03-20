@@ -40,13 +40,13 @@ fun main(args: Array<String>) {
                     // draw a square of points // TODO: remove this
                     val squareSize = 0.2
                     del("map:solid")
-                    for (x in 0..10) {
-                        if (x == 0 || x == 10) {
-                            for (y in 0..10) {
+                    for (x in -10..10) {
+                        if (x == -10 || x == 10) {
+                            for (y in -10..10) {
                                 hset("map:solid", "${x * squareSize},${y * squareSize}", "W")
                             }
                         } else {
-                            hset("map:solid", "${x * squareSize},0", "W")
+                            hset("map:solid", "${x * squareSize},${-10 * squareSize}", "W")
                             hset("map:solid", "${x * squareSize},${10 * squareSize}", "W")
                         }
                     }

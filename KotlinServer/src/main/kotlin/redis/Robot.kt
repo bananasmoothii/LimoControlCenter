@@ -1,9 +1,10 @@
 package fr.bananasmoothii.limocontrolcenter.redis
 
 import fr.bananasmoothii.limocontrolcenter.logger
-import fr.bananasmoothii.limocontrolcenter.redis.MapPoints.launchSaveMapPointDiff
+import fr.bananasmoothii.limocontrolcenter.redis.MapPoints.launchSaveRoundedMapPointDiff
 import kotlinx.coroutines.*
 import redis.clients.jedis.JedisPubSub
+import java.util.concurrent.ConcurrentHashMap
 
 class Robot(val id: String) {
     // we add SupervisorJob to the scope to avoid cancelling the whole scope when one of the jobs fails (the class
@@ -14,17 +15,18 @@ class Robot(val id: String) {
 
     private val jedisSubscribers = mutableListOf<JedisPubSub>()
 
-    private val updateMapSolidSubscribers = mutableMapOf<Any, suspend (StringMapPointsDiff) -> Unit>()
+    private val updateMapSolidSubscribers = ConcurrentHashMap<Any, suspend (StringMapPointsDiff) -> Unit>()
 
     init {
         val solidMapPointsSubscriber = object : JedisPubSub() {
             override fun onMessage(channel: String, message: String) {
                 logger.debug("Received message on channel $channel: $message")
                 try {
-                    val mapPointsDiff = DataSubscribers.deserializeMapPointsDiff(message)
-                    notifyAllMapSolidSubscribers(mapPointsDiff)
+                    val roundedMapPointDiff =
+                        MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
+                    notifyAllMapSolidSubscribers(roundedMapPointDiff)
 
-                    scope.launchSaveMapPointDiff(mapPointsDiff)
+                    scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
 
                 } catch (e: IllegalArgumentException) {
                     logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")

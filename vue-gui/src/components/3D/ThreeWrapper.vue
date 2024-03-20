@@ -59,7 +59,7 @@ function initWorld() {
   scene.add(light)
 
   // debug shadow camera
-  scene.add(new THREE.CameraHelper(light.shadow.camera))
+  // scene.add(new THREE.CameraHelper(light.shadow.camera))
 
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(90, 90, 1, 1), new THREE.MeshLambertMaterial({ color: 0xffebab }))
   plane.receiveShadow = true

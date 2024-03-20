@@ -7,17 +7,21 @@ object MapPoints {
 
     const val CUBE_SIZE: Double = 0.0457
 
-    fun CoroutineScope.launchSaveMapPointDiff(mapPointsDiff: StringMapPointsDiff) {
+    fun CoroutineScope.launchSaveRoundedMapPointDiff(mapPointsDiff: StringMapPointsDiff) {
         launch {
             RedisWrapper.use {
                 for (point in mapPointsDiff) {
                     val type = point[0]
                     val pointStr = point.substring(1)
 
-                    hset("map:solid", roundCoords(pointStr), type.toString())
+                    hset("map:solid", pointStr, type.toString())
                 }
             }
         }
+    }
+
+    fun roundMapPointDiff(mapPointsDiff: StringMapPointsDiff): StringMapPointsDiff {
+        return mapPointsDiff.mapTo(mutableSetOf()) { it[0] + roundCoords(it.substring(1)) }
     }
 
     fun roundCoords(coordsStr: String): String {

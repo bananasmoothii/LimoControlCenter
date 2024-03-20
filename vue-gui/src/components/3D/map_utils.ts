@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-export const CUBE_SIZE: number = 0.2
+export const CUBE_SIZE: number = 0.0457
 
 export enum WallPointType {
   WALL = 'W',
@@ -20,7 +20,7 @@ export function handleMapPointDiff(diff: string, scene: THREE.Scene) {
   const changedPoints = deserializeMapPointsDiff(diff)
 
   const cube = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)
-  const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 6, CUBE_SIZE)
+  const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 8, CUBE_SIZE)
   const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff })
   const unknownMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 })
   for (const point of changedPoints) {

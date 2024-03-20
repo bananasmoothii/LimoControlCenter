@@ -5,6 +5,8 @@ import kotlinx.coroutines.launch
 
 object MapPoints {
 
+    const val CUBE_SIZE: Double = 0.0457
+
     fun CoroutineScope.launchSaveMapPointDiff(mapPointsDiff: StringMapPointsDiff) {
         launch {
             RedisWrapper.use {
@@ -30,7 +32,7 @@ object MapPoints {
         }
     }
 
-    private fun roundCoord(x: Double): Double = Math.round(x * 10.0) / 10.0
+    private fun roundCoord(x: Double): Double = Math.round(x / CUBE_SIZE) * CUBE_SIZE
 }
 
 enum class MapPointType(val letter: Char) {

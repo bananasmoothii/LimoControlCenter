@@ -3,6 +3,7 @@ package fr.bananasmoothii.limocontrolcenter.redis
 import fr.bananasmoothii.limocontrolcenter.logger
 import fr.bananasmoothii.limocontrolcenter.redis.Robot.Companion.filterRobots
 import kotlinx.coroutines.*
+import java.util.concurrent.ConcurrentHashMap
 
 typealias StringMapPointsDiff = Set<String>
 
@@ -15,7 +16,7 @@ object DataSubscribers {
 
     // TODO: merge the maps from all robots in a coherent way
     private val allRobotsUpdateMapSolidSubscribers =
-        mutableMapOf<Any, suspend (mapPointsDiff: StringMapPointsDiff) -> Unit>()
+        ConcurrentHashMap<Any, suspend (mapPointsDiff: StringMapPointsDiff) -> Unit>()
 
     private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 

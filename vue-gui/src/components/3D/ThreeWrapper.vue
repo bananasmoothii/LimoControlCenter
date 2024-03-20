@@ -16,11 +16,6 @@ import * as map_utils from './map_utils.ts'
 
 var scene, camera, renderer, controls
 
-/**
- * @type {map_utils.Point2D[]}
- */
-const map2DPointsGroups = []
-
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
   scene = new THREE.Scene()
@@ -130,7 +125,7 @@ export default defineComponent({
     webSocketsStuff() {
       const host = process.env.NODE_ENV === 'development' ? window.location.host.split(':')[0] : window.location.host
       console.log(`using host '${host}' as websocket host`)
-      const mapSolidSocket = new WebSocket(`ws://${host}/ws/map/solid`)
+      const mapSolidSocket = new WebSocket(`ws://${host}/ws/update-map`)
 
       mapSolidSocket.addEventListener('open', () => {
         console.log('mapSolidSocket connected')
@@ -140,7 +135,7 @@ export default defineComponent({
       mapSolidSocket.addEventListener('message', (event) => {
         console.log('mapSolidSocket message', event.data)
 
-        map_utils.handleMapPointDiff(event.data, map2DPointsGroups, scene)
+        map_utils.handleMapPointDiff(event.data, scene)
       })
     },
   }

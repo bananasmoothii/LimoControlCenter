@@ -4,6 +4,7 @@ import fr.bananasmoothii.limocontrolcenter.config.Config
 import fr.bananasmoothii.limocontrolcenter.redis.DataSubscribers
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
 import fr.bananasmoothii.limocontrolcenter.webserver.Webserver
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import redis.clients.jedis.exceptions.JedisConnectionException
@@ -42,17 +43,17 @@ fun main(args: Array<String>) {
                     for (x in 0..10) {
                         if (x == 0 || x == 10) {
                             for (y in 0..10) {
-                                sadd("map:solid", "${x * squareSize},${y * squareSize}")
+                                hset("map:solid", "${x * squareSize},${y * squareSize}", "W")
                             }
                         } else {
-                            sadd("map:solid", "${x * squareSize},0")
-                            sadd("map:solid", "${x * squareSize},${10 * squareSize}")
+                            hset("map:solid", "${x * squareSize},0", "W")
+                            hset("map:solid", "${x * squareSize},${10 * squareSize}", "W")
                         }
                     }
                 }
             } catch (e: JedisConnectionException) {
                 logger.error("Redis is not working! Retrying in 5 seconds...")
-                Thread.sleep(5000)
+                delay(5000)
                 continue
             }
             break

@@ -2,6 +2,7 @@ package fr.bananasmoothii.limocontrolcenter.webserver
 
 import fr.bananasmoothii.limocontrolcenter.redis.DataSubscribers
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
+import fr.bananasmoothii.limocontrolcenter.redis.StringMapPointsDiff
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
@@ -14,10 +15,8 @@ import io.ktor.websocket.*
 /**
  * Translates two lists of points (added and removed) to a WebSocket frame.
  */
-private fun webSocketMapPointDiff(pointsToAdd: Collection<String>?, pointsToRemove: Collection<String>?): Frame {
-    val builder = DataSubscribers.serializeMapPointsDiff(pointsToAdd, pointsToRemove)
-    return Frame.Text(builder)
-}
+private fun webSocketMapPointDiff(mapPointsDiff: StringMapPointsDiff): Frame =
+    Frame.Text(DataSubscribers.serializeMapPointsDiff(mapPointsDiff))
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -30,9 +29,9 @@ fun Application.configureRouting() {
             call.respondText("Hello World!")
         }
 
-        webSocket("/ws/map/solid") {
+        webSocket("/ws/update-map") {
             DataSubscribers.subscribeAllRobotsUpdateMapSolid(this) { mapPointsDiff ->
-                send(webSocketMapPointDiff(mapPointsDiff.first, mapPointsDiff.second))
+                send(webSocketMapPointDiff(mapPointsDiff))
             }
 
             try {
@@ -41,9 +40,11 @@ fun Application.configureRouting() {
                     val instruction = frame.readText()
                     if (instruction == "sendall") {
                         val all = RedisWrapper.use {
-                            this.smembers("map:solid")
+                            this.hgetAll("map:solid")
+                        }.mapTo(mutableSetOf()) { (key, value) ->
+                            value + key // key is pos and value is type letter (W, U, P)
                         }
-                        send(webSocketMapPointDiff(all, null))
+                        send(webSocketMapPointDiff(all))
                     }
                 }
             } finally {

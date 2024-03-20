@@ -15,7 +15,7 @@ class Robot(val id: String) : CoroutineScope {
 
     private val jedisSubscribers = mutableListOf<JedisPubSub>()
 
-    private val updateMapSolidSubscribers = mutableMapOf<Any, suspend (MapPointsDiff) -> Unit>()
+    private val updateMapSolidSubscribers = mutableMapOf<Any, suspend (StringMapPointsDiff) -> Unit>()
 
     init {
         val solidMapPointsSubscriber = object : JedisPubSub() {
@@ -33,18 +33,18 @@ class Robot(val id: String) : CoroutineScope {
             }
         }
 
-        logger.debug("Subscribing to channel: $id update:map:solid")
-        RedisWrapper.subscribe(solidMapPointsSubscriber, "$id update:map:solid")
+        logger.debug("Subscribing to channel: $id update_map")
+        RedisWrapper.subscribe(solidMapPointsSubscriber, "$id update_map")
     }
 
-    fun subscribeToUpdateMapSolid(subscriber: Any, callback: suspend (MapPointsDiff) -> Unit) {
+    fun subscribeToUpdateMapSolid(subscriber: Any, callback: suspend (StringMapPointsDiff) -> Unit) {
         updateMapSolidSubscribers[subscriber] = callback
     }
 
     /**
      * Notify all subscribers with the given value. Blocking.
      */
-    private fun notifyAllMapSolidSubscribers(mapPointsDiff: MapPointsDiff) =
+    private fun notifyAllMapSolidSubscribers(mapPointsDiff: StringMapPointsDiff) =
         runBlocking {
             for (subscriber in updateMapSolidSubscribers.values) {
                 launch { subscriber(mapPointsDiff) }

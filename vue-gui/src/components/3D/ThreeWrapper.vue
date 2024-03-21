@@ -39,11 +39,11 @@ function initWorld() {
   //background color
   scene.background = new THREE.Color(0xffe699)
 
-  const ambiantLight = new THREE.AmbientLight(0xffffff)
+  const ambiantLight = new THREE.AmbientLight(0xe0e0e0)
   scene.add(ambiantLight)
 
   const light = new THREE.DirectionalLight(0xffffff, 1.6)
-  light.position.set(12, 41, 12)
+  light.position.set(12, 30, 12)
   light.target.position.set(0, 0, 0)
   light.castShadow = true
   light.shadow.bias = -0.00008
@@ -55,12 +55,12 @@ function initWorld() {
   light.shadow.camera.right = 25
   light.shadow.camera.top = 25
   light.shadow.camera.bottom = -25
-  light.shadow.radius = 2
+  light.shadow.radius = 1.8
   light.shadow.blurSamples = 10
   scene.add(light)
 
   // debug shadow camera
-  // scene.add(new THREE.CameraHelper(light.shadow.camera))
+  scene.add(new THREE.CameraHelper(light.shadow.camera))
 
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(90, 90, 1, 1), new THREE.MeshLambertMaterial({ color: 0xffebab }))
   plane.receiveShadow = true

@@ -72,3 +72,11 @@ h3 {
 h2 {
   @apply text-lg;
 }
+
+.robot-label {
+  font-family: monospace;
+  @apply text-white bg-background bg-opacity-20 backdrop-blur-sm rounded-lg text-lg;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.2rem 0.6rem;
+}

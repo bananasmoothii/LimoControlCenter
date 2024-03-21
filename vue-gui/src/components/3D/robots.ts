@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
 
 const loader = new GLTFLoader()
 
@@ -79,9 +80,7 @@ export function updateRobots(scene: THREE.Scene) {
           const frontWheels = object.getObjectByName('wheels-front')
           const backWheels = object.getObjectByName('wheels-back')
           if (frontWheels !== undefined && backWheels !== undefined) {
-            console.log('atan2', Math.atan2(distanceY, distanceX) / Math.PI * 180, 'angle', angle)
             const movementAngle = Math.atan2(distanceY, distanceX) - angle
-            console.log('movementAngle', movementAngle / Math.PI * 180, 'cos', Math.cos(movementAngle))
             const distanceForAngle = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)
             let rotation = distanceForAngle * 0.09
             frontWheels.rotation.x += rotation
@@ -121,7 +120,7 @@ async function createRobotIfNotExists(
           // position and rotation are not set here, but we do resize the object so it has thr right size
           let scale = 0.22
           robotObject.scale.set(scale, scale, scale)
-          gltf.scene.traverse(function(child) {
+          robotObject.traverse(function(child) {
             if ((child as THREE.Mesh).isMesh) { // see https://discourse.threejs.org/t/gltf-scene-traverse-property-ismesh-does-not-exist-on-type-object3d/27212
               child.castShadow = true
               child.receiveShadow = true
@@ -135,6 +134,15 @@ async function createRobotIfNotExists(
               }
             }
           })
+
+          // label
+          const div = document.createElement('div')
+          div.className = 'robot-label'
+          div.textContent = robotId
+          const label = new CSS2DObject(div)
+          label.position.set(0, 1.5, 0)
+          robotObject.add(label)
+
           scene.add(robotObject)
           resolve(robotObject)
         }, undefined, (error) => {

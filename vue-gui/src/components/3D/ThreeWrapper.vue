@@ -14,8 +14,9 @@ import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
 import { handleUpdateMapSockets } from './map.ts'
 import { handleRobotPosSocket, updateRobots } from '@/components/3D/robots.ts'
+import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
-var scene, camera, renderer, controls
+var scene, camera, renderer, labelRenderer, controls
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
@@ -27,8 +28,12 @@ function initWorld() {
   renderer.shadowMap.type = THREE.VSMShadowMap
   renderer.pixelRatio = window.devicePixelRatio
 
+  labelRenderer = new CSS2DRenderer()
+  labelRenderer.domElement.style.position = 'absolute'
+  labelRenderer.domElement.style.top = '0px'
+
   // controls: see https://threejs.org/docs/#examples/en/controls/MapControls
-  controls = new MapControls(camera, renderer.domElement)
+  controls = new MapControls(camera, labelRenderer.domElement)
   controls.enableDamping = true
   controls.minPolarAngle = 0
   controls.maxPolarAngle = Math.PI / 2 - 0.1
@@ -60,13 +65,21 @@ function initWorld() {
   scene.add(light)
 
   // debug shadow camera
-  scene.add(new THREE.CameraHelper(light.shadow.camera))
-
+  // scene.add(new THREE.CameraHelper(light.shadow.camera))
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(90, 90, 1, 1), new THREE.MeshLambertMaterial({ color: 0xffebab }))
   plane.receiveShadow = true
   plane.castShadow = false
   plane.rotation.x = -Math.PI / 2
   scene.add(plane)
+
+  // const earthDiv = document.createElement('div')
+  // earthDiv.className = 'label'
+  // earthDiv.textContent = 'Earth'
+  // earthDiv.style.backgroundColor = 'transparent'
+  //
+  // const earthLabel = new CSS2DObject(earthDiv)
+  // earthLabel.position.set(0, 1, 0)
+  // scene.add(earthLabel)
 }
 
 export default defineComponent({
@@ -83,9 +96,10 @@ export default defineComponent({
 
     initWorld()
 
-    let threeAppDiv = document.getElementById('three-app')
     this.onResize()
+    let threeAppDiv = document.getElementById('three-app')
     threeAppDiv.appendChild(renderer.domElement)
+    threeAppDiv.appendChild(labelRenderer.domElement)
 
     addEventListener('resize', () => this.onResize())
 
@@ -110,6 +124,7 @@ export default defineComponent({
       let height = window.innerHeight - divRect.y
 
       renderer.setSize(width, height)
+      labelRenderer.setSize(width, height)
       camera.aspect = width / height
       camera.updateProjectionMatrix()
       wrapper.style.height = `${height}px`
@@ -124,6 +139,7 @@ export default defineComponent({
       updateRobots(scene)
 
       renderer.render(scene, camera)
+      labelRenderer.render(scene, camera)
     },
     webSocketsStuff() {
       const host = process.env.NODE_ENV === 'development' ? window.location.host.split(':')[0] : window.location.host
@@ -132,7 +148,7 @@ export default defineComponent({
       handleUpdateMapSockets(host, scene)
 
       handleRobotPosSocket(host, scene)
-    },
+    }
   }
 })
 </script>

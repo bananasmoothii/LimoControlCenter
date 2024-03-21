@@ -32,7 +32,7 @@ function initWorld() {
   controls.enableDamping = true
   controls.minPolarAngle = 0
   controls.maxPolarAngle = Math.PI / 2 - 0.1
-  controls.minDistance = 2
+  controls.minDistance = 1
   controls.maxDistance = 25
   controls.maxTargetRadius = 20
 

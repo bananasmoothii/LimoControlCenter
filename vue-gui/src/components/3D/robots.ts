@@ -58,27 +58,47 @@ const ROBOT_Y = 0.045
 const ROBOT_OSCILLATION_PERIOD = 500 // ms
 
 export function updateRobots(scene: THREE.Scene) {
-  scene.traverse((child) => {
-    if (child.name.startsWith('robot-')) {
-      const robotId = child.name.split('-')[1]
+  scene.traverse((object) => {
+    if (object.name.startsWith('robot-')) {
+      const robotId = object.name.split('-')[1]
       const pos = robotsAndPos[robotId]
       if (pos !== undefined) {
         if (pos.last !== undefined && pos.transitionStartTime !== undefined) {
           // transition
           const progress = Math.min((Date.now() - pos.transitionStartTime) / TRANSITION_DURATION, 1)
-          const x = pos.last.x + (pos.current.x - pos.last.x) * progress
-          const y = pos.last.y + (pos.current.y - pos.last.y) * progress
-          const angle = pos.last.angle + (pos.current.angle - pos.last.angle) * progress
-          child.position.set(x, ROBOT_Y + 0.005 * Math.sin(2 * Math.PI * Date.now() / ROBOT_OSCILLATION_PERIOD), y)
-          child.rotation.set(0, angle, 0)
+          const distanceX = pos.current.x - pos.last.x
+          const distanceY = pos.current.y - pos.last.y
+          const angleDistance = pos.current.angle - pos.last.angle
+          const x = pos.last.x + distanceX * progress
+          const y = pos.last.y + distanceY * progress
+          const angle = pos.last.angle + angleDistance * progress
+          object.position.set(x, ROBOT_Y + 0.004 * Math.sin(2 * Math.PI * Date.now() / ROBOT_OSCILLATION_PERIOD), y)
+          object.rotation.set(0, angle + Math.PI / 2, 0)
+
+          // make wheels turn
+          const frontWheels = object.getObjectByName('wheels-front')
+          const backWheels = object.getObjectByName('wheels-back')
+          if (frontWheels !== undefined && backWheels !== undefined) {
+            console.log('atan2', Math.atan2(distanceY, distanceX) / Math.PI * 180, 'angle', angle)
+            const movementAngle = Math.atan2(distanceY, distanceX) - angle
+            console.log('movementAngle', movementAngle / Math.PI * 180, 'cos', Math.cos(movementAngle))
+            const distanceForAngle = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)
+            let rotation = distanceForAngle * 0.09
+            frontWheels.rotation.x += rotation
+            backWheels.rotation.x += rotation
+          }
         } else {
           // no transition
-          child.position.set(pos.current.x, ROBOT_Y, pos.current.y)
-          child.rotation.set(0, pos.current.angle, 0)
+          object.position.set(pos.current.x, ROBOT_Y, pos.current.y)
+          object.rotation.set(0, pos.current.angle + Math.PI / 2, 0)
         }
       }
     }
   })
+}
+
+function distance(a: RobotPos, b: RobotPos) {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
 }
 
 /**
@@ -105,6 +125,14 @@ async function createRobotIfNotExists(
             if ((child as THREE.Mesh).isMesh) { // see https://discourse.threejs.org/t/gltf-scene-traverse-property-ismesh-does-not-exist-on-type-object3d/27212
               child.castShadow = true
               child.receiveShadow = true
+              switch (child.name) {
+                case 'Cube003':
+                  child.name = 'wheels-front'
+                  break
+                case 'Cube005':
+                  child.name = 'wheels-back'
+                  break
+              }
             }
           })
           scene.add(robotObject)

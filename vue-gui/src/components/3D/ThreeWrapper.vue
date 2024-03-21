@@ -12,7 +12,8 @@ import { Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui
 import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
-import * as map_utils from './map_utils.ts'
+import { handleUpdateMapSockets } from './map.ts'
+import { handleRobotPosSocket, updateRobots } from '@/components/3D/robots.ts'
 
 var scene, camera, renderer, controls
 
@@ -120,23 +121,17 @@ export default defineComponent({
       // required if controls.enableDamping or controls.autoRotate are set to true
       controls.update()
 
+      updateRobots(scene)
+
       renderer.render(scene, camera)
     },
     webSocketsStuff() {
       const host = process.env.NODE_ENV === 'development' ? window.location.host.split(':')[0] : window.location.host
       console.log(`using host '${host}' as websocket host`)
-      const mapSolidSocket = new WebSocket(`ws://${host}/ws/update-map`)
 
-      mapSolidSocket.addEventListener('open', () => {
-        console.log('mapSolidSocket connected')
-        mapSolidSocket.send('sendall')
-      })
+      handleUpdateMapSockets(host, scene)
 
-      mapSolidSocket.addEventListener('message', (event) => {
-        console.log('mapSolidSocket message', event.data)
-
-        map_utils.handleMapPointDiff(event.data, scene)
-      })
+      handleRobotPosSocket(host, scene)
     },
   }
 })

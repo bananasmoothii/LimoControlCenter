@@ -16,6 +16,22 @@ export type Point = {
   type: WallPointType,
 }
 
+
+export function handleUpdateMapSockets(host: string, scene: THREE.Scene) {
+  const mapSolidSocket = new WebSocket(`ws://${host}/ws/update-map`)
+
+  mapSolidSocket.addEventListener('open', () => {
+    console.log('mapSolidSocket connected')
+    mapSolidSocket.send('sendall')
+  })
+
+  mapSolidSocket.addEventListener('message', (event) => {
+    console.log('mapSolidSocket message', event.data)
+
+    handleMapPointDiff(event.data, scene)
+  })
+}
+
 export function handleMapPointDiff(diff: string, scene: THREE.Scene) {
   const changedPoints = deserializeMapPointsDiff(diff)
 

@@ -52,6 +52,26 @@ fun Application.configureRouting() {
             }
         }
 
+        webSocket("/ws/robot-pos") {
+            DataSubscribers.subscribeAllRobotsUpdatePos(this) { robotId, newPos ->
+                send(Frame.Text("$robotId $newPos"))
+            }
+
+            try {
+                for (frame in incoming) {
+                    if (frame !is Frame.Text) continue
+                    val instruction = frame.readText()
+                    if (instruction == "sendall") {
+                        for (robot in DataSubscribers.robots.values) {
+                            send(Frame.Text("${robot.id} ${robot.lastPosString}"))
+                        }
+                    }
+                }
+            } finally {
+                DataSubscribers.unsubscribeAllRobotsUpdatePos(this)
+            }
+        }
+
         // static web page
         staticResources("/", "webstatic") {
             preCompressed(CompressedFileType.GZIP)

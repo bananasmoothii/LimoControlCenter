@@ -17,6 +17,8 @@ object DataSubscribers {
     // TODO: merge the maps from all robots in a coherent way
     private val allRobotsUpdateMapSolidSubscribers =
         ConcurrentHashMap<Any, suspend (mapPointsDiff: StringMapPointsDiff) -> Unit>()
+    private val allRobotsUpdatePosSubscribers =
+        ConcurrentHashMap<Any, suspend (robotId: String, newPos: String) -> Unit>()
 
     private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -58,6 +60,14 @@ object DataSubscribers {
                                 }
                             }
                         }
+
+                        robot.subscribeToUpdatePos(this) { pos ->
+                            allRobotsUpdatePosSubscribers.values.forEach { subscriber ->
+                                ioScope.launch {
+                                    subscriber(robotId, pos)
+                                }
+                            }
+                        }
                     }
                     robot.lastReceivedKeepAlive = System.currentTimeMillis()
                 }
@@ -71,6 +81,14 @@ object DataSubscribers {
 
     fun unsubscribeAllRobotsUpdateMapSolid(subscriber: Any) {
         allRobotsUpdateMapSolidSubscribers.remove(subscriber)
+    }
+
+    fun subscribeAllRobotsUpdatePos(subscriber: Any, callback: suspend (robotId: String, newPos: String) -> Unit) {
+        allRobotsUpdatePosSubscribers[subscriber] = callback
+    }
+
+    fun unsubscribeAllRobotsUpdatePos(subscriber: Any) {
+        allRobotsUpdatePosSubscribers.remove(subscriber)
     }
 
     fun serializeMapPointsDiff(

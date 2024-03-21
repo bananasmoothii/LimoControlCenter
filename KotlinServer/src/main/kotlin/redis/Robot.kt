@@ -17,29 +17,47 @@ class Robot(val id: String) {
 
     private val updateMapSolidSubscribers = ConcurrentHashMap<Any, suspend (StringMapPointsDiff) -> Unit>()
 
+    private val updatePosSubscribers = ConcurrentHashMap<Any, suspend (String) -> Unit>()
+
+    var lastPosString: String = "0,0,0"
+        private set
+
     init {
-        val solidMapPointsSubscriber = object : JedisPubSub() {
+        val robotSubscriber = object : JedisPubSub() {
             override fun onMessage(channel: String, message: String) {
                 logger.debug("Received message on channel $channel: $message")
-                try {
-                    val roundedMapPointDiff =
-                        MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
-                    notifyAllMapSolidSubscribers(roundedMapPointDiff)
+                when (channel.substringAfter(' ')) {
+                    "update_map" -> {
+                        try {
+                            val roundedMapPointDiff =
+                                MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
+                            notifyAllMapSolidSubscribers(roundedMapPointDiff)
 
-                    scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
+                            scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
 
-                } catch (e: IllegalArgumentException) {
-                    logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
+                        } catch (e: IllegalArgumentException) {
+                            logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
+                        }
+                    }
+
+                    "update_pos" -> {
+                        // message should be in format: x,y,angle (angle in radians)
+                        lastPosString = message
+                        notifyAllPosSubscribers(message)
+                    }
                 }
             }
         }
 
-        logger.debug("Subscribing to channel: $id update_map")
-        RedisWrapper.subscribe(solidMapPointsSubscriber, "$id update_map")
+        RedisWrapper.subscribe(robotSubscriber, "$id update_map", "$id update_pos")
     }
 
     fun subscribeToUpdateMapSolid(subscriber: Any, callback: suspend (StringMapPointsDiff) -> Unit) {
         updateMapSolidSubscribers[subscriber] = callback
+    }
+
+    fun subscribeToUpdatePos(subscriber: Any, callback: suspend (String) -> Unit) {
+        updatePosSubscribers[subscriber] = callback
     }
 
     /**
@@ -52,8 +70,17 @@ class Robot(val id: String) {
             }
         }
 
+    private fun notifyAllPosSubscribers(pos: String) =
+        runBlocking {
+            for (subscriber in updatePosSubscribers.values) {
+                launch { subscriber(pos) }
+            }
+        }
+
 
     suspend fun suspendRemove() {
+        notifyAllPosSubscribers("remove")
+
         RedisWrapper.use {
             srem("robots", id)
         }

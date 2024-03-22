@@ -27,7 +27,7 @@ type RobotPos = {
 
 }
 
-const robotsAndPos: { [key: string]: { last?: RobotPos, current: RobotPos, transitionStartTime?: number } } = {}
+let robotsAndPos: { [key: string]: { last?: RobotPos, current: RobotPos, transitionStartTime?: number } } = {}
 
 function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
   const split = update.split(' ')
@@ -36,23 +36,29 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
     // we only have the robot id, this means we should remove the robot from the scene
     scene.getObjectByName(`robot-${robotId}`)?.removeFromParent()
     delete robotsAndPos[robotId]
+    document.getElementById('robot-label-' + robotId)?.remove()
   } else {
     const coords = split[1].split(',')
     const x = parseFloat(coords[0])
     const y = parseFloat(coords[1])
     const angle = parseFloat(coords[2])
-    robotsAndPos[robotId] = {
-      last: robotsAndPos[robotId]?.current,
-      current: { x, y, angle },
-      transitionStartTime: Date.now()
-    }
 
-    createRobotIfNotExists(robotId, scene)
+    let transitionStartTime = Date.now()
+
+    createRobotIfNotExists(robotId, scene).then(robotObject => {
+      if (robotObject !== undefined) {
+        robotsAndPos[robotId] = {
+          last: robotsAndPos[robotId]?.current,
+          current: { x, y, angle },
+          transitionStartTime
+        }
+      }
+    })
   }
 }
 
 // should match the rate of sent robot positions
-const TRANSITION_DURATION = 1000 // ms
+const TRANSITION_DURATION = 100 // ms
 
 const ROBOT_Y = 0.045
 
@@ -82,7 +88,8 @@ export function updateRobots(scene: THREE.Scene) {
           if (frontWheels !== undefined && backWheels !== undefined) {
             const movementAngle = Math.atan2(distanceY, distanceX) - angle
             const distanceForAngle = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)
-            let rotation = distanceForAngle * 0.09
+            let rotation = distanceForAngle
+            // console.log('rotation', rotation, distanceForAngle, distanceX, distanceY, movementAngle, angle, pos.last.angle, pos.current.angle)
             frontWheels.rotation.x += rotation
             backWheels.rotation.x += rotation
           }
@@ -107,12 +114,15 @@ function distance(a: RobotPos, b: RobotPos) {
 async function createRobotIfNotExists(
   robotId: string,
   scene: THREE.Scene
-): Promise<THREE.Object3D> {
+): Promise<THREE.Object3D | undefined> {
   return new Promise((resolve, reject) => {
     const robotObject: THREE.Object3D | undefined = scene.getObjectByName(`robot-${robotId}`)
 
     if (robotObject === undefined) {
-      if (robotId ! in robotsAndPos) { // avoid creating the same robot twice
+      if (robotId in robotsAndPos) {
+        console.warn('Robot already exists in robotsAndPos', robotId)
+        resolve(undefined)
+      } else { // avoid creating the same robot twice
         robotsAndPos[robotId] = { current: { x: 0, y: ROBOT_Y, angle: 0 } }
         loader.load('/3D_models/robot.glb', (gltf: GLTF) => {
           const robotObject = gltf.scene
@@ -138,12 +148,14 @@ async function createRobotIfNotExists(
           // label
           const div = document.createElement('div')
           div.className = 'robot-label'
+          div.id = 'robot-label-' + robotId
           div.textContent = robotId
           const label = new CSS2DObject(div)
           label.position.set(0, 1.5, 0)
           robotObject.add(label)
 
           scene.add(robotObject)
+          console.log('Robot model loaded: ', robotObject.name)
           resolve(robotObject)
         }, undefined, (error) => {
           console.error('Error loading robot model', error)
@@ -155,4 +167,8 @@ async function createRobotIfNotExists(
       resolve(robotObject)
     }
   })
+}
+
+export function resetRobots() {
+  robotsAndPos = {}
 }

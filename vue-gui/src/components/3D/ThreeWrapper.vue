@@ -13,7 +13,7 @@ import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
 import { handleUpdateMapSockets } from './map.ts'
-import { handleRobotPosSocket, updateRobots } from '@/components/3D/robots.ts'
+import { handleRobotPosSocket, resetRobots, updateRobots } from '@/components/3D/robots.ts'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 var scene, camera, renderer, labelRenderer, controls
@@ -113,6 +113,7 @@ export default defineComponent({
   unmounted() {
     if (!this.isWebGLAvailable) return
     removeEventListener('resize', () => this.onResize())
+    resetRobots()
   },
   methods: {
     onResize() {

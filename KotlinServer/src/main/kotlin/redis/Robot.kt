@@ -13,8 +13,6 @@ class Robot(val id: String) {
 
     var lastReceivedKeepAlive: Long = 0
 
-    private val jedisSubscribers = mutableListOf<JedisPubSub>()
-
     private val updateMapSolidSubscribers = ConcurrentHashMap<Any, suspend (StringMapPointsDiff) -> Unit>()
 
     private val updatePosSubscribers = ConcurrentHashMap<Any, suspend (String) -> Unit>()
@@ -22,34 +20,32 @@ class Robot(val id: String) {
     var lastPosString: String = "0,0,0"
         private set
 
-    init {
-        val robotSubscriber = object : JedisPubSub() {
-            override fun onMessage(channel: String, message: String) {
-                logger.debug("Received message on channel $channel: $message")
-                when (channel.substringAfter(' ')) {
-                    "update_map" -> {
-                        try {
-                            val roundedMapPointDiff =
-                                MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
-                            notifyAllMapSolidSubscribers(roundedMapPointDiff)
+    private val jedisSubscriber = object : JedisPubSub() {
+        override fun onMessage(channel: String, message: String) {
+//            logger.debug("Received message on channel $channel: $message")
+            when (channel.substringAfter(' ')) {
+                "update_map" -> {
+                    try {
+                        val roundedMapPointDiff =
+                            MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
+                        notifyAllMapSolidSubscribers(roundedMapPointDiff)
 
-                            scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
+                        scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
 
-                        } catch (e: IllegalArgumentException) {
-                            logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
-                        }
+                    } catch (e: IllegalArgumentException) {
+                        logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
                     }
+                }
 
-                    "update_pos" -> {
-                        // message should be in format: x,y,angle (angle in radians)
-                        lastPosString = message
-                        notifyAllPosSubscribers(message)
-                    }
+                "update_pos" -> {
+                    // message should be in format: x,y,angle (angle in radians)
+                    lastPosString = message
+                    notifyAllPosSubscribers(message)
                 }
             }
         }
-
-        RedisWrapper.subscribe(robotSubscriber, "$id update_map", "$id update_pos")
+    }.also {
+        RedisWrapper.subscribe(it, "$id update_map", "$id update_pos")
     }
 
     fun subscribeToUpdateMapSolid(subscriber: Any, callback: suspend (StringMapPointsDiff) -> Unit) {
@@ -85,15 +81,13 @@ class Robot(val id: String) {
             srem("robots", id)
         }
 
-        for (subscriber in jedisSubscribers) {
-            subscriber.unsubscribe()
-        }
+        jedisSubscriber.unsubscribe()
 
         scope.cancel()
     }
 
     companion object {
-        const val KEEP_ALIVE_TIMEOUT: Long = 10 * 1000L
+        const val KEEP_ALIVE_TIMEOUT: Long = 1 * 1000L
 
         /**
          * Remove robots that didn't send a keep-alive in the last [KEEP_ALIVE_TIMEOUT] milliseconds.
@@ -104,7 +98,7 @@ class Robot(val id: String) {
             while (iterator.hasNext()) {
                 val robot = iterator.next().value
                 if (now - robot.lastReceivedKeepAlive > KEEP_ALIVE_TIMEOUT) {
-                    logger.info("Robot ${robot.id} disconnected (no keep-alive received for 10 seconds)")
+                    logger.info("Robot ${robot.id} disconnected (no keep-alive received for 1 second)")
 
                     robot.suspendRemove()
 
@@ -113,4 +107,4 @@ class Robot(val id: String) {
             }
         }
     }
-}
+}   

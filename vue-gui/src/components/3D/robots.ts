@@ -1,7 +1,11 @@
 import * as THREE from 'three'
+import { MeshStandardMaterial } from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
+import type { Ref } from 'vue'
+import { ref, watch } from 'vue'
+import { scene } from '@/components/3D/ThreeWrapper.vue'
 
 const loader = new GLTFLoader()
 
@@ -14,8 +18,6 @@ export function handleRobotPosSocket(host: string, scene: THREE.Scene) {
   })
 
   robotPosSocket.addEventListener('message', (event) => {
-    console.log('robotPosSocket message', event.data)
-
     handleRobotPosUpdate(event.data, scene)
   })
 }
@@ -182,4 +184,44 @@ function createRobotIfNotExists(
 
 export function resetRobots() {
   robotsAndPos = {}
+}
+
+export let selectedRobot: Ref<string | null> = ref(null)
+
+let blinkInterval: number | undefined
+let blinkIsOn = false
+
+watch(selectedRobot, (newVal, oldVal) => {
+  console.log('selectedRobot', newVal, oldVal)
+  if (blinkInterval !== undefined) {
+    clearInterval(blinkInterval)
+    blinkInterval = undefined
+  }
+  if (oldVal !== null) {
+    document.getElementById('robot-label-' + oldVal)?.classList.remove('selected')
+    setRobotEmissivity(oldVal, 0x000000)
+  }
+  blinkIsOn = true
+  if (newVal !== null) {
+    document.getElementById('robot-label-' + newVal)?.classList.add('selected')
+    blinkRobot(newVal)
+  }
+})
+
+function setRobotEmissivity(robotId: string, colorHex: number) {
+  scene.getObjectByName(`robot-${robotId}`)?.traverse((child: THREE.Object3D) => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh
+      (mesh.material as MeshStandardMaterial).emissive.setHex(colorHex)
+    }
+  })
+}
+
+function blinkRobot(robotId: string) {
+  let colorHex = blinkIsOn ? 0xa0a0a0 : 0x000000
+  setRobotEmissivity(robotId, colorHex)
+  blinkIsOn = !blinkIsOn
+  blinkInterval = setTimeout(() => {
+    blinkRobot(robotId)
+  }, 500)
 }

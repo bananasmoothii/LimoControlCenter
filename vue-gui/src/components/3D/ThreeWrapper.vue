@@ -13,10 +13,12 @@ import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
 import { handleUpdateMapSockets } from './map.ts'
-import { handleRobotPosSocket, resetRobots, updateRobots } from '@/components/3D/robots.ts'
+import { handleRobotPosSocket, resetRobots, selectedRobot, updateRobots } from '@/components/3D/robots.ts'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import { animatePin, loadPin, pinObj } from '@/components/3D/pin_goal.ts'
 
-var scene, camera, renderer, labelRenderer, controls
+export var scene
+var camera, renderer, labelRenderer, controls, width, height, top
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
@@ -72,7 +74,47 @@ function initWorld() {
   plane.rotation.x = -Math.PI / 2
   scene.add(plane)
 
+  loadPin(scene)
+  let raycaster = new THREE.Raycaster()
+  let mouse = new THREE.Vector2()
+  document.addEventListener('click', (event) => {
+    if (pinObj !== undefined) {
+      mouse.x = (event.clientX / width) * 2 - 1
+      mouse.y = -((event.clientY - top) / height) * 2 + 1
+      raycaster.setFromCamera(mouse, camera)
 
+      let intersectRobot = raycaster.intersectObjects(scene.children.filter((obj) => obj.name.startsWith('robot-')))
+      if (intersectRobot.length > 0) {
+        let obj = intersectRobot[0].object
+        while (!obj.name.startsWith('robot-')) {
+          obj = obj.parent
+        }
+        console.log(obj.name)
+        selectedRobot.value = obj.name.split('-', 2)[1]
+        pinObj.visible = false
+        return
+      }
+
+      selectedRobot.value = null
+
+      let intersectsPinGoal = raycaster.intersectObject(pinObj)
+      if (intersectsPinGoal.length > 0) {
+        pinObj.visible = false
+        return
+      }
+
+      let intersectPlane = raycaster.intersectObject(plane)
+      if (intersectPlane.length > 0) {
+        let intersect = intersectPlane[0]
+        pinObj.visible = true
+        pinObj.position.copy(intersect.point)
+      } else {
+        pinObj.visible = false
+      }
+
+
+    }
+  })
 }
 
 export default defineComponent({
@@ -114,15 +156,16 @@ export default defineComponent({
       let wrapper = document.getElementById('three-app-wrapper')
 
       let divRect = wrapper.getBoundingClientRect()
-      let width = window.innerWidth
-      let height = window.innerHeight - divRect.y
+      top = divRect.y
+      width = window.innerWidth
+      height = window.innerHeight - top
 
       renderer.setSize(width, height)
       labelRenderer.setSize(width, height)
       camera.aspect = width / height
       camera.updateProjectionMatrix()
       wrapper.style.height = `${height}px`
-      threeAppDiv.style.top = `${divRect.y}px`
+      threeAppDiv.style.top = `${top}px`
     },
     animate() {
       requestAnimationFrame(this.animate)
@@ -131,6 +174,7 @@ export default defineComponent({
       controls.update()
 
       updateRobots(scene)
+      animatePin()
 
       renderer.render(scene, camera)
       labelRenderer.render(scene, camera)

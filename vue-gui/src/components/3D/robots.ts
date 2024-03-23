@@ -27,7 +27,13 @@ type RobotPos = {
 
 }
 
-let robotsAndPos: { [key: string]: { last?: RobotPos, current: RobotPos, transitionStartTime?: number } } = {}
+type RobotData = {
+  last?: RobotPos,
+  current: RobotPos,
+  transitionStartTime?: number
+}
+
+let robotsAndPos: { [key: string]: RobotData } = {}
 
 function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
   const split = update.split(' ')
@@ -45,15 +51,14 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
 
     let transitionStartTime = Date.now()
 
-    createRobotIfNotExists(robotId, scene).then(robotObject => {
-      if (robotObject !== undefined) {
-        robotsAndPos[robotId] = {
-          last: robotsAndPos[robotId]?.current,
-          current: { x, y, angle },
-          transitionStartTime
-        }
+    const robot = createRobotIfNotExists(robotId, scene)
+    if (robot !== undefined) {
+      robotsAndPos[robotId] = {
+        last: robotsAndPos[robotId]?.current,
+        current: { x, y, angle },
+        transitionStartTime
       }
-    })
+    }
   }
 }
 
@@ -87,8 +92,7 @@ export function updateRobots(scene: THREE.Scene) {
           const backWheels = object.getObjectByName('wheels-back')
           if (frontWheels !== undefined && backWheels !== undefined) {
             const movementAngle = Math.atan2(distanceY, distanceX) - angle
-            const distanceForAngle = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)
-            let rotation = distanceForAngle
+            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)
             // console.log('rotation', rotation, distanceForAngle, distanceX, distanceY, movementAngle, angle, pos.last.angle, pos.current.angle)
             frontWheels.rotation.x += rotation
             backWheels.rotation.x += rotation
@@ -107,66 +111,73 @@ function distance(a: RobotPos, b: RobotPos) {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
 }
 
+let robotObject: THREE.Object3D
+
+loader.load('/3D_models/robot.glb', (gltf: GLTF) => {
+  const obj = gltf.scene
+  // position and rotation are not set here, but we do resize the object, so it has thr right size
+  let scale = 0.22
+  obj.scale.set(scale, scale, scale)
+  obj.traverse(function(child) {
+    if ((child as THREE.Mesh).isMesh) { // see https://discourse.threejs.org/t/gltf-scene-traverse-property-ismesh-does-not-exist-on-type-object3d/27212
+      child.castShadow = true
+      child.receiveShadow = true
+      switch (child.name) {
+        case 'Cube003':
+          child.name = 'wheels-front'
+          break
+        case 'Cube005':
+          child.name = 'wheels-back'
+          break
+      }
+    }
+  })
+
+  robotObject = obj
+  console.log('Robot model loaded')
+}, undefined, (error) => {
+  console.error('Error loading robot model', error)
+})
+
+function getNewRobot(defaultRobot: THREE.Object3D, robotId: string): THREE.Object3D {
+  const obj = defaultRobot.clone(true)
+
+  obj.name = `robot-${robotId}`
+
+  // label
+  const div = document.createElement('div')
+  div.className = 'robot-label'
+  div.id = 'robot-label-' + robotId
+  div.textContent = robotId
+  const label = new CSS2DObject(div)
+  label.position.set(0, 1.4, 0)
+  obj.add(label)
+
+  return obj
+}
+
 /**
  * Create a robot if it does not exist in the scene
  * @return the robot object (inside a promise because the loading is async)
  */
-async function createRobotIfNotExists(
+function createRobotIfNotExists(
   robotId: string,
   scene: THREE.Scene
-): Promise<THREE.Object3D | undefined> {
-  return new Promise((resolve, reject) => {
-    const robotObject: THREE.Object3D | undefined = scene.getObjectByName(`robot-${robotId}`)
+): THREE.Object3D | undefined {
+  const sceneRobot: THREE.Object3D | undefined = scene.getObjectByName(`robot-${robotId}`)
 
-    if (robotObject === undefined) {
-      if (robotId in robotsAndPos) {
-        console.warn('Robot already exists in robotsAndPos', robotId)
-        resolve(undefined)
-      } else { // avoid creating the same robot twice
-        robotsAndPos[robotId] = { current: { x: 0, y: ROBOT_Y, angle: 0 } }
-        loader.load('/3D_models/robot.glb', (gltf: GLTF) => {
-          const robotObject = gltf.scene
-          robotObject.name = `robot-${robotId}`
-          // position and rotation are not set here, but we do resize the object so it has thr right size
-          let scale = 0.22
-          robotObject.scale.set(scale, scale, scale)
-          robotObject.traverse(function(child) {
-            if ((child as THREE.Mesh).isMesh) { // see https://discourse.threejs.org/t/gltf-scene-traverse-property-ismesh-does-not-exist-on-type-object3d/27212
-              child.castShadow = true
-              child.receiveShadow = true
-              switch (child.name) {
-                case 'Cube003':
-                  child.name = 'wheels-front'
-                  break
-                case 'Cube005':
-                  child.name = 'wheels-back'
-                  break
-              }
-            }
-          })
-
-          // label
-          const div = document.createElement('div')
-          div.className = 'robot-label'
-          div.id = 'robot-label-' + robotId
-          div.textContent = robotId
-          const label = new CSS2DObject(div)
-          label.position.set(0, 1.5, 0)
-          robotObject.add(label)
-
-          scene.add(robotObject)
-          console.log('Robot model loaded: ', robotObject.name)
-          resolve(robotObject)
-        }, undefined, (error) => {
-          console.error('Error loading robot model', error)
-          delete robotsAndPos[robotId]
-          reject(error)
-        })
-      }
+  if (sceneRobot === undefined) {
+    if (robotObject !== undefined) {
+      const robot = getNewRobot(robotObject, robotId)
+      scene.add(robot)
+      return robot
     } else {
-      resolve(robotObject)
+      console.log('Robot model not loaded yet, skipping robot creation')
+      return undefined
     }
-  })
+  } else {
+    return sceneRobot
+  }
 }
 
 export function resetRobots() {

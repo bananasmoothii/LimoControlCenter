@@ -22,23 +22,32 @@ object DataSubscribers {
 
     private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    init {
-        ioScope.launch {
-            while (true) {
-                robots.filterRobots()
-                delay(1000)
-            }
-        }
-    }
-
     suspend fun init() {
         RedisWrapper.use {
             del("robots")
         }
 
+        RedisWrapper.subscribe("update_pos") { _, message ->
+            val (robotId, newPos) = message.split(' ', limit = 2)
+            robots[robotId]?.updatePos(newPos)
+        }
+
+        RedisWrapper.subscribe("update_map") { _, message ->
+            val (robotId, mapPointsDiff) = message.split(' ', limit = 2)
+            robots[robotId]?.updateMap(mapPointsDiff)
+        }
+
+        ioScope.launch {
+            while (true) {
+                robots.filterRobots()
+                delay(1000)
+            }
+        }.start()
+
+
         RedisWrapper.subscribe("general") { _, message ->
 //            logger.debug("Received message on channel general: $message")
-            val messageSplit = message.split(' ', limit = 2)
+            val messageSplit = message.split(' ', limit = 3)
             val robotId = messageSplit[0]
             val command = messageSplit[1]
             val param = messageSplit.getOrNull(2)

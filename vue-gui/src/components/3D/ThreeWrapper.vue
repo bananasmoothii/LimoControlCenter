@@ -72,14 +72,7 @@ function initWorld() {
   plane.rotation.x = -Math.PI / 2
   scene.add(plane)
 
-  // const earthDiv = document.createElement('div')
-  // earthDiv.className = 'label'
-  // earthDiv.textContent = 'Earth'
-  // earthDiv.style.backgroundColor = 'transparent'
-  //
-  // const earthLabel = new CSS2DObject(earthDiv)
-  // earthLabel.position.set(0, 1, 0)
-  // scene.add(earthLabel)
+
 }
 
 export default defineComponent({

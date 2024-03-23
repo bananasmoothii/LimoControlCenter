@@ -4,9 +4,11 @@ import fr.bananasmoothii.limocontrolcenter.config
 import fr.bananasmoothii.limocontrolcenter.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPubSub
+import java.time.Duration
 
 object RedisWrapper {
     private val pool: JedisPool
@@ -22,6 +24,10 @@ object RedisWrapper {
             redis.user,
             redis.password
         )
+        pool.setConfig(GenericObjectPoolConfig<Jedis?>().apply {
+            maxTotal = 8
+            setMaxWait(Duration.ofMillis(1000))
+        })
     }
 
     /**
@@ -39,8 +45,9 @@ object RedisWrapper {
     fun subscribe(jedisPubSub: JedisPubSub, vararg channels: String) {
         val subscriber = object : Thread("RedisSub-${++redisSubscribersNb}") {
             override fun run() {
-                val jedis = pool.resource
-                jedis.subscribe(jedisPubSub, *channels)
+                pool.resource.use {
+                    it.subscribe(jedisPubSub, *channels)
+                }
             }
         }
         subscriber.start()

@@ -3,7 +3,6 @@ package fr.bananasmoothii.limocontrolcenter.redis
 import fr.bananasmoothii.limocontrolcenter.logger
 import fr.bananasmoothii.limocontrolcenter.redis.MapPoints.launchSaveRoundedMapPointDiff
 import kotlinx.coroutines.*
-import redis.clients.jedis.JedisPubSub
 import java.util.concurrent.ConcurrentHashMap
 
 class Robot(val id: String) {
@@ -20,32 +19,21 @@ class Robot(val id: String) {
     var lastPosString: String = "0,0,0"
         private set
 
-    private val jedisSubscriber = object : JedisPubSub() {
-        override fun onMessage(channel: String, message: String) {
-//            logger.debug("Received message on channel $channel: $message")
-            when (channel.substringAfter(' ')) {
-                "update_map" -> {
-                    try {
-                        val roundedMapPointDiff =
-                            MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
-                        notifyAllMapSolidSubscribers(roundedMapPointDiff)
+    fun updateMap(message: String) {
+        try {
+            val roundedMapPointDiff = MapPoints.roundMapPointDiff(DataSubscribers.deserializeMapPointsDiff(message))
+            notifyAllMapSolidSubscribers(roundedMapPointDiff)
 
-                        scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
+            scope.launchSaveRoundedMapPointDiff(roundedMapPointDiff)
 
-                    } catch (e: IllegalArgumentException) {
-                        logger.warn("Received invalid message on channel $channel: $e\nmessage: $message")
-                    }
-                }
-
-                "update_pos" -> {
-                    // message should be in format: x,y,angle (angle in radians)
-                    lastPosString = message
-                    notifyAllPosSubscribers(message)
-                }
-            }
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Received invalid message on channel $id update_map: $e\nmessage: $message")
         }
-    }.also {
-        RedisWrapper.subscribe(it, "$id update_map", "$id update_pos")
+    }
+
+    fun updatePos(message: String) {
+        lastPosString = message
+        notifyAllPosSubscribers(message)
     }
 
     fun subscribeToUpdateMapSolid(subscriber: Any, callback: suspend (StringMapPointsDiff) -> Unit) {
@@ -77,11 +65,10 @@ class Robot(val id: String) {
     suspend fun suspendRemove() {
         notifyAllPosSubscribers("remove")
 
+        logger.debug("Unsubscribing from Redis channels for robot $id")
         RedisWrapper.use {
             srem("robots", id)
         }
-
-        jedisSubscriber.unsubscribe()
 
         scope.cancel()
     }

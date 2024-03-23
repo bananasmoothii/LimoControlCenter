@@ -17,8 +17,7 @@ import { handleRobotPosSocket, resetRobots, selectedRobot, updateRobots } from '
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { animatePin, loadPin, pinObj } from '@/components/3D/pin_goal.ts'
 
-export var scene
-var camera, renderer, labelRenderer, controls, width, height, top
+var scene, camera, renderer, labelRenderer, controls, width, height, top
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
@@ -78,7 +77,7 @@ function initWorld() {
   let raycaster = new THREE.Raycaster()
   let mouse = new THREE.Vector2()
   document.addEventListener('click', (event) => {
-    if (pinObj !== undefined) {
+    if (pinObj !== null) { // we need pinObj for almost all actions
       mouse.x = (event.clientX / width) * 2 - 1
       mouse.y = -((event.clientY - top) / height) * 2 + 1
       raycaster.setFromCamera(mouse, camera)
@@ -97,10 +96,12 @@ function initWorld() {
 
       selectedRobot.value = null
 
-      let intersectsPinGoal = raycaster.intersectObject(pinObj)
-      if (intersectsPinGoal.length > 0) {
-        pinObj.visible = false
-        return
+      if (pinObj.visible) {
+        let intersectsPinGoal = raycaster.intersectObject(pinObj)
+        if (intersectsPinGoal.length > 0) {
+          pinObj.visible = false
+          return
+        }
       }
 
       let intersectPlane = raycaster.intersectObject(plane)

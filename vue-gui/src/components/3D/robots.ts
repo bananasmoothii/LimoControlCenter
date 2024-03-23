@@ -5,11 +5,13 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
 import type { Ref } from 'vue'
 import { ref, watch } from 'vue'
-import { scene } from '@/components/3D/ThreeWrapper.vue'
 
 const loader = new GLTFLoader()
 
-export function handleRobotPosSocket(host: string, scene: THREE.Scene) {
+let scene: THREE.Scene
+
+export function handleRobotPosSocket(host: string, scene_: THREE.Scene) {
+  scene = scene_
   const robotPosSocket = new WebSocket(`ws://${host}/ws/robot-pos`)
 
   robotPosSocket.addEventListener('open', () => {

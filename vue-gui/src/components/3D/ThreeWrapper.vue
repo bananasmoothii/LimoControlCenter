@@ -76,10 +76,18 @@ function initWorld() {
   loadPin(scene)
   let raycaster = new THREE.Raycaster()
   let mouse = new THREE.Vector2()
-  document.addEventListener('click', (event) => {
-    if (pinObj !== null) { // we need pinObj for almost all actions
+  const minDistanceToConsiderAsDrag = 6
+  let startX, startY
+  document.addEventListener('mousedown', (event) => {
+    startX = event.clientX
+    startY = event.clientY
+  })
+  document.addEventListener('mouseup', (event) => {
+    let distance = Math.sqrt(Math.pow(event.clientX - startX, 2) + Math.pow(event.clientY - startY, 2))
+    if (distance < minDistanceToConsiderAsDrag && pinObj !== null) { // we need pinObj for almost all actions
+      let scrolledWrapperTop = document.getElementById('three-app-wrapper').getBoundingClientRect().y
       mouse.x = (event.clientX / width) * 2 - 1
-      mouse.y = -((event.clientY - top) / height) * 2 + 1
+      mouse.y = -((event.clientY - scrolledWrapperTop) / height) * 2 + 1
       raycaster.setFromCamera(mouse, camera)
 
       let intersectRobot = raycaster.intersectObjects(scene.children.filter((obj) => obj.name.startsWith('robot-')))
@@ -112,8 +120,6 @@ function initWorld() {
       } else {
         pinObj.visible = false
       }
-
-
     }
   })
 }
@@ -138,6 +144,7 @@ export default defineComponent({
     threeAppDiv.appendChild(labelRenderer.domElement)
 
     addEventListener('resize', () => this.onResize())
+    addEventListener('scroll', () => this.onResize())
 
     controls.addEventListener('start', () => this.isGrabbing = true)
     controls.addEventListener('end', () => this.isGrabbing = false)
@@ -156,8 +163,7 @@ export default defineComponent({
       let threeAppDiv = document.getElementById('three-app')
       let wrapper = document.getElementById('three-app-wrapper')
 
-      let divRect = wrapper.getBoundingClientRect()
-      top = divRect.y
+      top = 76
       width = window.innerWidth
       height = window.innerHeight - top
 

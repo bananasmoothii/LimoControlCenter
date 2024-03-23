@@ -2,7 +2,6 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { selectedRobot } from '@/components/3D/robots'
 import { ignoreNextClick } from '@/components/3D/click_handling'
 
 const loader = new GLTFLoader()
@@ -95,21 +94,21 @@ export function animatePin() {
   }
 }
 
-export function getPinForSelectedRobot(scene: THREE.Scene): THREE.Object3D {
-  let selected = selectedRobot.value
-  if (selected === null) {
+export function getPinForSelectedRobot(robotId: string | null, scene: THREE.Scene): THREE.Object3D {
+  robotId
+  if (robotId === null) {
     if (unassignedPin!.parent === null) {
       scene.add(unassignedPin!)
     }
     return unassignedPin!
   }
-  let pin = robotGoals[selected]
+  let pin = robotGoals[robotId]
   if (pin) {
     return pin
   }
-  pin = getNewPin(selected)
+  pin = getNewPin(robotId)
   scene.add(pin)
-  robotGoals[selected] = pin
+  robotGoals[robotId] = pin
   return pin
 }
 

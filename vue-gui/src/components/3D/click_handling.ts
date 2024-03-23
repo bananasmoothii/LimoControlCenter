@@ -42,10 +42,15 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
           }
           obj = obj.parent
         }
-        console.log(obj.name)
-        selectedRobot.value = obj.name.split('-', 2)[1]
-        if (unassignedPin) {
+        console.log('clicked on', obj.name)
+        let clickedRobot = obj.name.split('-', 2)[1]
+        if (unassignedPin?.parent) {
+          let pinObj = getPinForSelectedRobot(clickedRobot, scene)
+          pinObj.visible = true
+          pinObj.position.copy(unassignedPin.position)
           removeUnassignedPin()
+        } else {
+          selectedRobot.value = clickedRobot
         }
         return
       }
@@ -53,11 +58,11 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
       let intersectPlane = raycaster.intersectObject(plane)
       if (intersectPlane.length > 0) {
         let intersect = intersectPlane[0]
-        let pinObj = getPinForSelectedRobot(scene)
+        let pinObj = getPinForSelectedRobot(selectedRobot.value, scene)
         pinObj.visible = true
         pinObj.position.copy(intersect.point)
       } else {
-        if (unassignedPin) {
+        if (unassignedPin?.parent) {
           removeUnassignedPin()
         }
       }

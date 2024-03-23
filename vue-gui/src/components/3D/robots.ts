@@ -5,6 +5,7 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
 import type { Ref } from 'vue'
 import { ref, watch } from 'vue'
+import { searchFilter } from '@/main'
 
 const loader = new GLTFLoader()
 
@@ -144,7 +145,14 @@ loader.load('/3D_models/robot.glb', (gltf: GLTF) => {
 })
 
 function getNewRobot(defaultRobot: THREE.Object3D, robotId: string): THREE.Object3D {
-  const obj = defaultRobot.clone(true)
+  const obj = defaultRobot.clone()
+  obj.traverse(child => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh
+      mesh.material = mesh.material.clone()
+    }
+
+  })
 
   obj.name = `robot-${robotId}`
 
@@ -207,6 +215,7 @@ watch(selectedRobot, (newVal, oldVal) => {
   if (newVal !== null) {
     document.getElementById('robot-label-' + newVal)?.classList.add('selected')
     blinkRobot(newVal)
+    searchFilter.value = newVal
   }
 })
 

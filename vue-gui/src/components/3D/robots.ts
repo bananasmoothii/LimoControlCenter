@@ -1,11 +1,12 @@
 import * as THREE from 'three'
-import { Material, MeshStandardMaterial } from 'three'
+import { MeshStandardMaterial } from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
 import type { Ref } from 'vue'
 import { ref, watch } from 'vue'
 import { searchFilter } from '@/main'
+import { cloneMeshMaterial } from '@/components/3D/util'
 
 const loader = new GLTFLoader()
 
@@ -149,11 +150,7 @@ function getNewRobot(defaultRobot: THREE.Object3D, robotId: string): THREE.Objec
   obj.traverse(child => {
     if ((child as THREE.Mesh).isMesh) {
       const mesh = child as THREE.Mesh
-      if (mesh.material instanceof Material) {
-        mesh.material = mesh.material.clone()
-      } else if (mesh.material instanceof Array) {
-        mesh.material = mesh.material.map(m => m.clone())
-      }
+      cloneMeshMaterial(mesh)
     }
 
   })

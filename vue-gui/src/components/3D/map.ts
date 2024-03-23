@@ -26,7 +26,7 @@ export function handleUpdateMapSockets(host: string, scene: THREE.Scene) {
   })
 
   mapSolidSocket.addEventListener('message', (event) => {
-    console.log('mapSolidSocket message', event.data)
+    // console.log('mapSolidSocket message', event.data)
 
     handleMapPointDiff(event.data, scene)
   })

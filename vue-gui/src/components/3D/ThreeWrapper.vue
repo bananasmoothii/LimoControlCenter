@@ -3,21 +3,28 @@
   <div id="three-app-wrapper">
     <div id="three-app" class="absolute top-0 left-0" :class="isGrabbing ? 'cursor-grabbing' : 'cursor-grab'"></div>
   </div>
+  <button id="hidden-remove-pin-button" style="display: none;" class="pin-label">
+    <XMarkIcon />
+  </button>
 </template>
 
 <script lang="js">
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import * as THREE from 'three'
 import { Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui/vue'
+import { XMarkIcon } from '@heroicons/vue/20/solid'
 import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
 import { handleUpdateMapSockets } from './map.ts'
-import { handleRobotPosSocket, resetRobots, selectedRobot, updateRobots } from '@/components/3D/robots.ts'
+import { handleRobotPosSocket, resetRobots, updateRobots } from '@/components/3D/robots.ts'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { animatePin, loadPin, pinObj } from '@/components/3D/pin_goal.ts'
+import { animatePin, loadPin } from '@/components/3D/pin_goal.ts'
+import { click_handling } from '@/components/3D/click_handling.ts'
 
-var scene, camera, renderer, labelRenderer, controls, width, height, top
+var scene, camera, renderer, labelRenderer, controls, top
+var viewWidth = ref(0)
+var viewHeight = ref(0)
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
@@ -74,59 +81,12 @@ function initWorld() {
   scene.add(plane)
 
   loadPin(scene)
-  let raycaster = new THREE.Raycaster()
-  let mouse = new THREE.Vector2()
-  const minDistanceToConsiderAsDrag = 6
-  let startX, startY
-  document.addEventListener('mousedown', (event) => {
-    startX = event.clientX
-    startY = event.clientY
-  })
-  document.addEventListener('mouseup', (event) => {
-    let distance = Math.sqrt(Math.pow(event.clientX - startX, 2) + Math.pow(event.clientY - startY, 2))
-    if (distance < minDistanceToConsiderAsDrag && pinObj !== null) { // we need pinObj for almost all actions
-      let scrolledWrapperTop = document.getElementById('three-app-wrapper').getBoundingClientRect().y
-      mouse.x = (event.clientX / width) * 2 - 1
-      mouse.y = -((event.clientY - scrolledWrapperTop) / height) * 2 + 1
-      raycaster.setFromCamera(mouse, camera)
-
-      let intersectRobot = raycaster.intersectObjects(scene.children.filter((obj) => obj.name.startsWith('robot-')))
-      if (intersectRobot.length > 0) {
-        let obj = intersectRobot[0].object
-        while (!obj.name.startsWith('robot-')) {
-          obj = obj.parent
-        }
-        console.log(obj.name)
-        selectedRobot.value = obj.name.split('-', 2)[1]
-        pinObj.visible = false
-        return
-      }
-
-      selectedRobot.value = null
-
-      if (pinObj.visible) {
-        let intersectsPinGoal = raycaster.intersectObject(pinObj)
-        if (intersectsPinGoal.length > 0) {
-          pinObj.visible = false
-          return
-        }
-      }
-
-      let intersectPlane = raycaster.intersectObject(plane)
-      if (intersectPlane.length > 0) {
-        let intersect = intersectPlane[0]
-        pinObj.visible = true
-        pinObj.position.copy(intersect.point)
-      } else {
-        pinObj.visible = false
-      }
-    }
-  })
+  click_handling(scene, camera, plane, viewWidth, viewHeight)
 }
 
 export default defineComponent({
   name: 'ThreeWrapper',
-  components: { NoWebGLDialog, Dialog, DialogDescription, DialogTitle, DialogPanel },
+  components: { NoWebGLDialog, Dialog, DialogDescription, DialogTitle, DialogPanel, XMarkIcon },
   data() {
     return {
       isWebGLAvailable: WebGL.isWebGLAvailable(),
@@ -164,8 +124,10 @@ export default defineComponent({
       let wrapper = document.getElementById('three-app-wrapper')
 
       top = 76
-      width = window.innerWidth
-      height = window.innerHeight - top
+      let width = window.innerWidth
+      let height = window.innerHeight - top
+      viewWidth.value = width
+      viewHeight.value = height
 
       renderer.setSize(width, height)
       labelRenderer.setSize(width, height)

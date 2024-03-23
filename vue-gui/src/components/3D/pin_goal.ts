@@ -1,10 +1,18 @@
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import * as THREE from 'three'
+import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import { selectedRobot } from '@/components/3D/robots'
+import { ignoreNextClick } from '@/components/3D/click_handling'
 
 const loader = new GLTFLoader()
 
-export let pinObj: THREE.Object3D | undefined = undefined
+let defaultPinObj: THREE.Object3D | undefined = undefined
+
+// map of robot id to pin object
+export const robotGoals: { [key: string]: THREE.Object3D } = {}
+
+export let unassignedPin: THREE.Object3D | undefined = undefined
 
 export function loadPin(scene: THREE.Scene) {
   loader.load('/3D_models/pin_goal.glb', (gltf: GLTF) => {
@@ -20,23 +28,94 @@ export function loadPin(scene: THREE.Scene) {
           opacity: 0.6,
           metalness: 1,
           roughness: 0.5,
-          emissive: 0xc2a9bb,
+          emissive: 0x78b569,
           side: THREE.DoubleSide
         })
       }
     })
-    pinObj = pin
-    pinObj.position.set(0, 0.1, 0)
-    pinObj.visible = false
-    scene.add(pinObj)
+    defaultPinObj = pin
+
+    unassignedPin = getNewPin(null, 0xc2a9bb)
   }, undefined, (error) => {
     console.error('Error loading pin model', error)
   })
 }
 
-export function animatePin() {
-  if (pinObj !== undefined && pinObj.visible) {
-    pinObj.rotation.y = Date.now() * 0.001
-    pinObj.position.y = 0.1 + 0.1 * Math.sin(Date.now() * 0.002)
+function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
+  const obj = defaultPinObj!.clone()
+
+  if (color !== undefined) {
+    obj.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        mesh.material = (mesh.material as THREE.Material).clone();
+        (mesh.material as THREE.MeshStandardMaterial).emissive.setHex(color)
+      }
+    })
   }
+
+  obj.name = robotId === null ? 'default-pin' : `pin-${robotId}`
+
+  // label
+  const button = document.createElement('button')
+  let templateButton = document.getElementById('hidden-remove-pin-button')!
+  button.id = 'pin-label-' + robotId
+  button.className = templateButton.className
+  button.innerHTML = templateButton.innerHTML
+  button.style.display = 'block'
+  button.style.width = '2em'
+  button.style.height = '2em'
+  button.addEventListener('pointerdown', (event) => {
+    ignoreNextClick.value = true
+    let buttonBox = button.getBoundingClientRect()
+    if (buttonBox.x <= event.clientX && event.clientX <= buttonBox.x + buttonBox.width &&
+      buttonBox.y <= event.clientY && event.clientY <= buttonBox.y + buttonBox.height) {
+
+      if (robotId !== null) {
+        robotGoals[robotId].removeFromParent()
+        delete robotGoals[robotId]
+      } else {
+        unassignedPin?.removeFromParent()
+      }
+      button.remove()
+    }
+  })
+  const label = new CSS2DObject(button)
+  label.position.set(0, 0.7, 0)
+  obj.add(label)
+  return obj
+}
+
+export function animatePin() {
+  for (const pin of Object.values(robotGoals).concat([unassignedPin!])) {
+    if (defaultPinObj !== undefined && pin.visible) {
+      pin.rotation.y = Date.now() * 0.001
+      pin.position.y = 0.1 + 0.1 * Math.sin(Date.now() * 0.002)
+    }
+  }
+}
+
+export function getPinForSelectedRobot(scene: THREE.Scene): THREE.Object3D {
+  let selected = selectedRobot.value
+  if (selected === null) {
+    if (unassignedPin!.parent === null) {
+      scene.add(unassignedPin!)
+    }
+    return unassignedPin!
+  }
+  let pin = robotGoals[selected]
+  if (pin) {
+    return pin
+  }
+  pin = getNewPin(selected)
+  scene.add(pin)
+  robotGoals[selected] = pin
+  return pin
+}
+
+export function removeUnassignedPin() {
+  if (unassignedPin) {
+    unassignedPin.removeFromParent()
+  }
+  document.getElementById('pin-label-null')?.remove()
 }

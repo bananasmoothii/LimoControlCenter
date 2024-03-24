@@ -1,5 +1,6 @@
 package fr.bananasmoothii.limocontrolcenter.webserver
 
+import fr.bananasmoothii.limocontrolcenter.logger
 import fr.bananasmoothii.limocontrolcenter.redis.MapPoints
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
 import fr.bananasmoothii.limocontrolcenter.robots.RobotManager
@@ -12,6 +13,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import redis.clients.jedis.Jedis
 
 /**
  * Translates two lists of points (added and removed) to a WebSocket frame.
@@ -73,9 +75,22 @@ fun Application.configureRouting() {
             }
         }
 
-        webSocket("/ws/robot-goals") {
+        webSocket("/ws/update-goal") {
+            val messagesSentByThisClient = mutableSetOf<String>()
+
+            fun Jedis.sendGoalMsg(msg: String) {
+                messagesSentByThisClient.add(msg)
+                publish("update_goal", msg)
+            }
+
             RobotManager.updateGoalSubscriber[this] = { robotId, goal ->
-                send(Frame.Text("$robotId ${8}")) // TODO
+                val msgToSend = "$robotId ${RobotManager.serializeGoalUpdate(goal)}"
+                if (msgToSend in messagesSentByThisClient) {
+                    logger.debug("Not sending $msgToSend because it came from this client")
+                    messagesSentByThisClient.remove(msgToSend)
+                } else {
+                    send(Frame.Text(msgToSend))
+                }
             }
 
             try {
@@ -83,8 +98,29 @@ fun Application.configureRouting() {
                     if (frame !is Frame.Text) continue
                     val instruction = frame.readText()
                     if (instruction == "sendall") {
-                        for (robot in RobotManager.robots.values) {
-                            send(Frame.Text("${robot.id} ${8}"))
+                        RedisWrapper.use {
+                            this.hgetAll("robots:goals")
+                        }.forEach { (robotId, goalStr) ->
+                            send(Frame.Text("$robotId $goalStr"))
+                        }
+                    } else {
+                        // setting a goal
+                        try {
+                            val (robotId, goalStr) = instruction.split(' ', limit = 2)
+                            val goal = RobotManager.deserializeGoalUpdate(goalStr)
+                            if (goal == null) {
+                                RedisWrapper.use {
+                                    hdel("robots:goals", robotId)
+                                    sendGoalMsg("$robotId remove")
+                                }
+                            } else {
+                                RedisWrapper.use {
+                                    hset("robots:goals", robotId, goalStr)
+                                    sendGoalMsg("$robotId $goalStr")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            logger.error("Invalid instruction: $instruction", e)
                         }
                     }
                 }

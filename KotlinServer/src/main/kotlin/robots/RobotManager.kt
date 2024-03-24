@@ -98,9 +98,7 @@ object RobotManager {
             val robotId = messageSplit[0]
             val newGoalStr = messageSplit[1]
 
-            val newGoal = if (newGoalStr == "remove") null else newGoalStr.split(',', limit = 2).let {
-                Point2D(it[0].toDouble(), it[1].toDouble())
-            }
+            val newGoal = deserializeGoalUpdate(newGoalStr)
 
             updateGoalSubscriber.forEach { (_, subscriber) ->
                 scope.launch {
@@ -119,6 +117,14 @@ object RobotManager {
             }
         }
     }
+
+    fun deserializeGoalUpdate(message: String): Point2D? =
+        if (message == "remove") null else message.split(',', limit = 2).let {
+            Point2D(it[0].toDouble(), it[1].toDouble())
+        }
+
+    fun serializeGoalUpdate(goal: Point2D?): String =
+        if (goal == null) "remove" else "${goal.x},${goal.y}"
 
 
     private const val KEEP_ALIVE_TIMEOUT: Long = 1 * 1000L
@@ -142,6 +148,7 @@ object RobotManager {
 
                 RedisWrapper.use {
                     hdel("robots:pos", robot.id)
+                    hdel("robots:goals", robot.id)
                 }
 
                 iterator.remove()

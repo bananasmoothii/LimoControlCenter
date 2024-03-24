@@ -3,13 +3,14 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { ignoreNextClick } from '@/components/3D/click_handling'
+import { reactive } from 'vue'
 
 const loader = new GLTFLoader()
 
 let defaultPinObj: THREE.Object3D | undefined = undefined
 
 // map of robot id to pin object
-export const robotGoals: { [key: string]: { obj: THREE.Object3D, isFollowing?: boolean } } = {}
+export const robotGoals: { [key: string]: { obj: THREE.Object3D, isFollowing?: boolean } } = reactive({})
 
 export let unassignedPin: THREE.Object3D | undefined = undefined
 
@@ -27,7 +28,6 @@ export function loadPin(scene: THREE.Scene) {
           opacity: 0.6,
           metalness: 1,
           roughness: 0.5,
-          emissive: 0x53a5b8, // blue // 0x78b569 for green
           side: THREE.DoubleSide
         })
       }
@@ -43,15 +43,13 @@ export function loadPin(scene: THREE.Scene) {
 function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
   const obj = defaultPinObj!.clone()
 
-  if (color !== undefined) {
-    obj.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh
-        mesh.material = (mesh.material as THREE.Material).clone();
-        (mesh.material as THREE.MeshStandardMaterial).emissive.setHex(color)
-      }
-    })
-  }
+  obj.traverse(child => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh
+      mesh.material = (mesh.material as THREE.Material).clone();
+      (mesh.material as THREE.MeshStandardMaterial).emissive.setHex(color ?? 0x53a5b8)
+    }
+  })
 
   obj.name = robotId === null ? 'default-pin' : `pin-${robotId}`
 
@@ -95,7 +93,7 @@ export function animatePin() {
   }
 }
 
-export function getPinForSelectedRobot(robotId: string | null, scene: THREE.Scene): THREE.Object3D {
+export function getPinForRobot(robotId: string | null, scene: THREE.Scene): THREE.Object3D {
   if (robotId === null) {
     if (unassignedPin!.parent === null) {
       scene.add(unassignedPin!)
@@ -120,6 +118,7 @@ export function removePin(robotId?: string) {
       delete robotGoals[robotId]
       document.getElementById('pin-label-' + robotId)?.remove()
     }
+    delete robotGoals[robotId]
   } else {
     if (unassignedPin) {
       unassignedPin.removeFromParent()
@@ -135,34 +134,59 @@ type LaunchRobotGoals = {
   }
 }
 
+let updateGoalSocket: WebSocket
+
+export function handleUpdateGoalSocket(host: string, scene: THREE.Scene) {
+  updateGoalSocket = new WebSocket(`ws://${host}/ws/update-goal`)
+
+  updateGoalSocket.addEventListener('open', () => {
+    console.log('updateGoalSocket connected')
+    updateGoalSocket.send('sendall')
+  })
+
+  updateGoalSocket.addEventListener('message', (event) => {
+    handleUpdateGoal(event.data, scene)
+  })
+}
+
+function handleUpdateGoal(update: string, scene: THREE.Scene) {
+  const split = update.split(' ', 2)
+  const robotId = split[0]
+  if (split[1] === 'remove') {
+    removePin(robotId)
+  } else {
+    const coords = split[1].split(',', 2)
+    const x = parseFloat(coords[0])
+    const y = parseFloat(coords[1])
+
+    let goal = getPinForRobot(robotId, scene)
+    goal.position.set(x, 0, y)
+    showPinAsBeingFollowed(robotGoals[robotId], true)
+  }
+}
+
+export function showPinAsBeingFollowed(goal: { obj: THREE.Object3D; isFollowing?: boolean }, beingFollowed: boolean) {
+  goal.isFollowing = beingFollowed
+  const color = beingFollowed ? 0x78b569 : 0x53a5b8
+  goal.obj.traverse(child => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh
+      (mesh.material as THREE.MeshStandardMaterial).emissive.setHex(color)
+    }
+  })
+}
+
 export function launchRobotsToGoals(robotIds: string[] = Object.keys(robotGoals)) {
   let robotGoalsToSend: LaunchRobotGoals = {}
   for (const [robotId, goal] of Object.entries(robotGoals)) {
     if (!robotIds.includes(robotId)) continue
     robotGoalsToSend[robotId] = { x: goal.obj.position.x, y: goal.obj.position.z }
   }
-  fetch('/api/launch-robots', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ goals: robotGoalsToSend })
-  }).then(response => {
-    if (!response.ok) {
-      console.error('Error launching robots', response)
-      return
-    }
-    for (const robotId of robotIds) {
-      let goal = robotGoals[robotId]
-      goal.isFollowing = true
-      goal.obj.traverse(child => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh
-          (mesh.material as THREE.MeshStandardMaterial).emissive.setHex(0x78b569)
-        }
-      })
-    }
-  }).catch(error => {
-    console.error('Error launching robots', error)
-  })
+  for (const robotId of robotIds) {
+    let goal = robotGoals[robotId]
+
+    updateGoalSocket.send(`${robotId} ${goal.obj.position.x},${goal.obj.position.z}`)
+
+    showPinAsBeingFollowed(goal, true)
+  }
 }

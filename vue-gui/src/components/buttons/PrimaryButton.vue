@@ -1,11 +1,13 @@
 <template xmlns="http://www.w3.org/1999/html">
   <button
+    :disabled="disabled"
     @click="onClick"
     @mouseenter="mouseEnter"
     @mouseleave="mouseLeave"
     type="button"
     ref="button"
-    class="block rounded-lg bg-primary px-3 py-2.5 font-semibold text-gray-900 transition-all duration-200 ease-in-out hover:bg-primary-lighter hover:text-gray-700 min-w-20"
+    class="block rounded-lg bg-primary px-3 py-2.5 font-semibold text-gray-900 transition-all duration-200 ease-in-out hover:bg-primary-lighter hover:text-gray-700 min-w-20
+           disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
   >
     <slot />
   </button>
@@ -14,6 +16,12 @@
 <script lang="ts">
 export default {
   name: 'PrimaryButton',
+  props: {
+    disabled: {
+      type: Boolean,
+      default: false
+    }
+  },
   emits: {
     click: (e: MouseEvent) => true
   },

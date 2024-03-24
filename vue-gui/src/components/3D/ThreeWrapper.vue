@@ -19,7 +19,7 @@ import { MapControls } from 'three/addons/controls/MapControls.js'
 import { handleUpdateMapSockets } from './map.ts'
 import { handleRobotPosSocket, resetRobots, updateRobots } from '@/components/3D/robots.ts'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { animatePin, loadPin } from '@/components/3D/pin_goal.ts'
+import { animatePin, handleUpdateGoalSocket, loadPin } from '@/components/3D/pin_goal.ts'
 import { click_handling } from '@/components/3D/click_handling.ts'
 import { host } from '@/components/3D/util.ts'
 
@@ -153,6 +153,8 @@ export default defineComponent({
       handleUpdateMapSockets(host, scene)
 
       handleRobotPosSocket(host, scene)
+
+      handleUpdateGoalSocket(host, scene)
     }
   }
 })

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { InstancedMesh } from 'three'
 
 export const CUBE_SIZE: number = 0.0457
 
@@ -32,33 +33,145 @@ export function handleUpdateMapSockets(host: string, scene: THREE.Scene) {
   })
 }
 
-export function handleMapPointDiff(diff: string, scene: THREE.Scene) {
+
+// const cube = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)
+const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 8, CUBE_SIZE)
+
+const wallMaterial = new THREE.MeshLambertMaterial({
+  color: 0xffffff
+})
+const unknownMaterial = new THREE.MeshLambertMaterial({
+  color: 0x444444
+})
+
+// 50 is a default value, if more are needed, you need to create a new mesh
+
+let wallMesh: InstancedMesh = new InstancedMesh(wall, wallMaterial, 3000)
+wallMesh.count = 0
+
+let unknownMesh: InstancedMesh = new InstancedMesh(wall, unknownMaterial, 3000)
+unknownMesh.count = 0
+
+wallMesh.castShadow = true
+wallMesh.receiveShadow = true
+unknownMesh.castShadow = true
+unknownMesh.receiveShadow = true
+
+let meshAdded = false
+
+const dummy = new THREE.Object3D()
+
+let wallPositionsX: number[] = []
+let wallPositionsY: number[] = []
+
+let unknownPositionsX: number[] = []
+let unknownPositionsY: number[] = []
+
+let wallFreeIndices: number[] = []
+let unknownFreeIndices: number[] = []
+
+function getPointIndex(x: number, y: number, positionsX: number[], positionsY: number[]): number {
+  for (let i = 0; i < positionsX.length; i++) {
+    if (positionsX[i] === x && positionsY[i] === y) return i
+  }
+  return -1
+
+}
+
+export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
   const changedPoints = deserializeMapPointsDiff(diff)
 
-  const cube = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)
-  const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 8, CUBE_SIZE)
-  const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff })
-  const unknownMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 })
+  if (!meshAdded) {
+    scene.add(wallMesh)
+    scene.add(unknownMesh)
+    meshAdded = true
+  }
+
   for (const point of changedPoints) {
+    if (point.z !== undefined) {
+      console.warn('3D map does not support 3D points yet')
+      continue
+    }
+
     // remove existing things at this pos
-    for (const type in WallPointType) {
-      const possibleObjectName = serializeStringPoint({ ...point, type: type as WallPointType })
-      scene.getObjectByName(possibleObjectName)?.removeFromParent()
+    const wallIndex = getPointIndex(point.x, point.y, wallPositionsX, wallPositionsY)
+    if (wallIndex !== -1) {
+      wallPositionsX.splice(wallIndex, 1)
+      wallPositionsY.splice(wallIndex, 1)
+      wallFreeIndices.push(wallIndex)
+    }
+    const unknownIndex = getPointIndex(point.x, point.y, unknownPositionsX, unknownPositionsY)
+    if (unknownIndex !== -1) {
+      unknownPositionsX.splice(unknownIndex, 1)
+      unknownPositionsY.splice(unknownIndex, 1)
+      unknownFreeIndices.push(unknownIndex)
     }
 
     if (point.type === WallPointType.PASSABLE) continue // passable is represented by absence of obstacles
 
-    const mesh = new THREE.Mesh(
-      point.z === undefined ? wall : cube,
-      point.type === WallPointType.WALL ? wallMaterial : unknownMaterial
-    )
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    mesh.position.set(point.x, point.z ?? CUBE_SIZE * 3, point.y)
-    mesh.name = serializeStringPoint(point)
-    scene.add(mesh)
-
+    if (point.type === WallPointType.WALL) {
+      addPoint(point, wallMesh, wallPositionsX, wallPositionsY, wallFreeIndices, (newMesh) => {
+        wallMesh.removeFromParent()
+        wallMesh.dispose()
+        wallMesh = newMesh
+        scene.add(wallMesh)
+      })
+    } else {
+      addPoint(point, unknownMesh, unknownPositionsX, unknownPositionsY, unknownFreeIndices, (newMesh) => {
+        unknownMesh.removeFromParent()
+        unknownMesh.dispose()
+        unknownMesh = newMesh
+        scene.add(unknownMesh)
+      })
+    }
   }
+}
+
+function addPoint(
+  point: Point,
+  mesh: InstancedMesh,
+  positionsX: number[],
+  positionsY: number[],
+  freeIndices: number[],
+  setMesh: (mesh: InstancedMesh) => void
+) {
+  let mesh2 = mesh
+  let index = findFreePos(mesh, freeIndices, newMesh => {
+    mesh2 = newMesh
+    setMesh(newMesh)
+  })
+  // console.log("index", index)
+  positionsX[index] = point.x
+  positionsY[index] = point.y
+  dummy.position.set(point.x, 0, point.y)
+  dummy.updateMatrix()
+  mesh2.setMatrixAt(mesh2.count, dummy.matrix)
+  mesh2.count++
+  mesh2.instanceMatrix.needsUpdate = true
+}
+
+// see https://stackoverflow.com/questions/1100311/what-is-the-ideal-growth-rate-for-a-dynamically-allocated-array
+const GROWTH_FACTOR = 1.5
+
+function findFreePos(mesh: InstancedMesh, freeIndices: number[], setMesh: (mesh: InstancedMesh) => void): number {
+  if (freeIndices.length > 0) {
+    return freeIndices.pop()!
+  }
+  if (mesh.count >= mesh.instanceMatrix.count) {
+    let newSize = Math.ceil(mesh.instanceMatrix.count * GROWTH_FACTOR)
+    console.log(`growing mesh from ${mesh.instanceMatrix.count} (${mesh.count}) to ${newSize}`)
+    const newMesh = new InstancedMesh(mesh.geometry, mesh.material, newSize)
+    newMesh.count = mesh.count
+    for (let i = 0; i < mesh.instanceMatrix.count; i++) {
+      mesh.getMatrixAt(i, dummy.matrix)
+      newMesh.setMatrixAt(i, dummy.matrix)
+    }
+    // newMesh.copy(mesh)
+    console.log(`new mesh size: ${newMesh.instanceMatrix.count} (${newMesh.count})`)
+    setMesh(newMesh)
+    return newMesh.count
+  }
+  return mesh.count
 }
 
 function deserializeSinglePoint(point: string): Point {

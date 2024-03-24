@@ -40,14 +40,19 @@ fun main(args: Array<String>) {
 
                     // draw a square of points // TODO: remove this
                     del("map")
-                    for (x in -10..10) {
+                    for (x in -50..50) {
                         if (x == -10 || x == 10) {
                             for (y in -10..10) {
                                 hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "W")
                             }
-                        } else {
+                        } else if (x in -10..10) {
                             hset("map", "${x * CUBE_SIZE},${-10 * CUBE_SIZE}", "W")
                             hset("map", "${x * CUBE_SIZE},${10 * CUBE_SIZE}", "W")
+                        }
+                        for (y in -50..50) {
+                            if (x !in -10..10 || y !in -10..10) {
+                                hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "U")
+                            }
                         }
                     }
                 }

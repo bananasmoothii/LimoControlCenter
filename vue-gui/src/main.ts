@@ -3,6 +3,7 @@ import './assets/style.scss'
 import { createApp, ref, watch } from 'vue'
 import App from './App.vue'
 import router from './router'
+import { initSearchFilterWatching } from '@/components/3D/robots'
 
 
 // the text of the search input
@@ -19,10 +20,8 @@ app.use(router)
 
 app.mount('#app')
 
-watch(searchFilter, (newFilter, oldFilter) => {
-  // if (newFilter.length < 3) {
-  //     if (newFilter === "") router.replace({query: {}});
-  //     return;
-  // }
+watch(searchFilter, (newFilter: string) => {
   router.replace({ query: { s: newFilter || undefined } })
 })
+
+initSearchFilterWatching()

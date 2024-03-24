@@ -216,9 +216,39 @@ watch(selectedRobot, (newVal, oldVal) => {
   if (newVal !== null) {
     document.getElementById('robot-label-' + newVal)?.classList.add('selected')
     blinkRobot(newVal)
-    searchFilter.value = newVal
+    if (Date.now() - lastSearchFilterChanged >= 500) {
+      searchFilter.value = newVal
+    }
+  } else {
+    if (Date.now() - lastSearchFilterChanged >= 500) {
+      searchFilter.value = ''
+    }
   }
 })
+
+let lastSearchFilterChanged = 0
+
+function selectRobotWithSearchFilter() {
+  let newSearchFilter = searchFilter.value
+  console.log('triggered searchFilter watch', newSearchFilter)
+  lastSearchFilterChanged = Date.now()
+  if (newSearchFilter === '') {
+    selectedRobot.value = null
+    return
+  }
+  for (const robotId in robotsAndPos) {
+    if (robotId.includes(newSearchFilter)) {
+      selectedRobot.value = robotId
+      return
+    }
+  }
+}
+
+export function initSearchFilterWatching() {
+  console.log('initSearchFilterWatching')
+  watch(searchFilter, selectRobotWithSearchFilter, { immediate: true })
+  watch(robotCount, selectRobotWithSearchFilter)
+}
 
 function setRobotEmissivity(robotId: string, colorHex: number) {
   scene.getObjectByName(`robot-${robotId}`)?.traverse((child: THREE.Object3D) => {

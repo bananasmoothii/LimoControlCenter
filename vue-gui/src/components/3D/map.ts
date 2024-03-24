@@ -67,9 +67,6 @@ let wallPositionsY: number[] = []
 let unknownPositionsX: number[] = []
 let unknownPositionsY: number[] = []
 
-let wallFreeIndices: number[] = []
-let unknownFreeIndices: number[] = []
-
 function getPointIndex(x: number, y: number, positionsX: number[], positionsY: number[]): number {
   for (let i = 0; i < positionsX.length; i++) {
     if (positionsX[i] === x && positionsY[i] === y) return i
@@ -98,26 +95,30 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
     if (wallIndex !== -1) {
       wallPositionsX.splice(wallIndex, 1)
       wallPositionsY.splice(wallIndex, 1)
-      wallFreeIndices.push(wallIndex)
+      wallMesh.getMatrixAt(wallMesh.count - 1, dummy.matrix)
+      wallMesh.setMatrixAt(wallIndex, dummy.matrix)
+      wallMesh.count--
     }
     const unknownIndex = getPointIndex(point.x, point.y, unknownPositionsX, unknownPositionsY)
     if (unknownIndex !== -1) {
       unknownPositionsX.splice(unknownIndex, 1)
       unknownPositionsY.splice(unknownIndex, 1)
-      unknownFreeIndices.push(unknownIndex)
+      unknownMesh.getMatrixAt(unknownMesh.count - 1, dummy.matrix)
+      unknownMesh.setMatrixAt(unknownIndex, dummy.matrix)
+      unknownMesh.count--
     }
 
     if (point.type === WallPointType.PASSABLE) continue // passable is represented by absence of obstacles
 
     if (point.type === WallPointType.WALL) {
-      addPoint(point, wallMesh, wallPositionsX, wallPositionsY, wallFreeIndices, (newMesh) => {
+      addPoint(point, wallMesh, wallPositionsX, wallPositionsY, (newMesh) => {
         wallMesh.removeFromParent()
         wallMesh.dispose()
         wallMesh = newMesh
         scene.add(wallMesh)
       })
     } else {
-      addPoint(point, unknownMesh, unknownPositionsX, unknownPositionsY, unknownFreeIndices, (newMesh) => {
+      addPoint(point, unknownMesh, unknownPositionsX, unknownPositionsY, (newMesh) => {
         unknownMesh.removeFromParent()
         unknownMesh.dispose()
         unknownMesh = newMesh
@@ -132,11 +133,10 @@ function addPoint(
   mesh: InstancedMesh,
   positionsX: number[],
   positionsY: number[],
-  freeIndices: number[],
   setMesh: (mesh: InstancedMesh) => void
 ) {
   let mesh2 = mesh
-  let index = findFreePos(mesh, freeIndices, newMesh => {
+  let index = findFreePos(mesh, newMesh => {
     mesh2 = newMesh
     setMesh(newMesh)
   })
@@ -153,10 +153,7 @@ function addPoint(
 // see https://stackoverflow.com/questions/1100311/what-is-the-ideal-growth-rate-for-a-dynamically-allocated-array
 const GROWTH_FACTOR = 1.5
 
-function findFreePos(mesh: InstancedMesh, freeIndices: number[], setMesh: (mesh: InstancedMesh) => void): number {
-  if (freeIndices.length > 0) {
-    return freeIndices.pop()!
-  }
+function findFreePos(mesh: InstancedMesh, setMesh: (mesh: InstancedMesh) => void): number {
   if (mesh.count >= mesh.instanceMatrix.count) {
     let newSize = Math.ceil(mesh.instanceMatrix.count * GROWTH_FACTOR)
     console.log(`growing mesh from ${mesh.instanceMatrix.count} (${mesh.count}) to ${newSize}`)

@@ -63,6 +63,7 @@ function loadCloudsIfNeeded(scene: THREE.Object3D) {
           instanceMesh.count = 0
           instanceMesh.castShadow = true
           instanceMesh.receiveShadow = true
+          instanceMesh.frustumCulled = false
           cloudsMesh.push(instanceMesh)
           cloudPositions.push({ x: [], y: [] })
           scene.add(instanceMesh)
@@ -109,8 +110,10 @@ unknownMesh.count = 0
 
 wallMesh.castShadow = true
 wallMesh.receiveShadow = true
+wallMesh.frustumCulled = false
 unknownMesh.castShadow = true
 unknownMesh.receiveShadow = true
+unknownMesh.frustumCulled = false
 
 let meshAdded = false
 

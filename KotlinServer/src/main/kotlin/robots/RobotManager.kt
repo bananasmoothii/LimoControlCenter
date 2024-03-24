@@ -25,7 +25,8 @@ object RobotManager {
 
     suspend fun init() {
         RedisWrapper.use {
-            del("robots")
+            del("robots:pos")
+            del("robots:goals")
         }
 
         scope.launch {

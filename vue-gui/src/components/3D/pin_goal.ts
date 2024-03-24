@@ -64,18 +64,8 @@ function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
   button.style.height = '2em'
   button.addEventListener('pointerdown', (event) => {
     ignoreNextClick.value = true
-    let buttonBox = button.getBoundingClientRect()
-    if (buttonBox.x <= event.clientX && event.clientX <= buttonBox.x + buttonBox.width &&
-      buttonBox.y <= event.clientY && event.clientY <= buttonBox.y + buttonBox.height) {
-
-      if (robotId !== null) {
-        robotGoals[robotId].obj.removeFromParent()
-        delete robotGoals[robotId]
-      } else {
-        unassignedPin?.removeFromParent()
-      }
-      button.remove()
-    }
+    removePin(robotId ?? undefined)
+    button.remove()
   })
   const label = new CSS2DObject(button)
   label.position.set(0, 0.7, 0)
@@ -115,10 +105,11 @@ export function removePin(robotId?: string) {
     let goal = robotGoals[robotId]
     if (goal) {
       goal.obj.removeFromParent()
-      delete robotGoals[robotId]
       document.getElementById('pin-label-' + robotId)?.remove()
     }
     delete robotGoals[robotId]
+    console.log('remove goal', robotId)
+    updateGoalSocket.send(`${robotId} remove`)
   } else {
     if (unassignedPin) {
       unassignedPin.removeFromParent()

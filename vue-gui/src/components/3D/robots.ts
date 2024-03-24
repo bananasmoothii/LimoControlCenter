@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
 import type { Ref } from 'vue'
-import { ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { searchFilter } from '@/main'
 import { cloneMeshMaterial } from '@/components/3D/util'
 
@@ -39,7 +39,7 @@ type RobotData = {
   transitionStartTime?: number
 }
 
-let robotsAndPos: { [key: string]: RobotData } = {}
+let robotsAndPos: { [key: string]: RobotData } = reactive({})
 
 function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
   const split = update.split(' ')
@@ -237,3 +237,5 @@ function blinkRobot(robotId: string) {
     blinkRobot(robotId)
   }, 500)
 }
+
+export const robotCount = computed(() => Object.keys(robotsAndPos).length)

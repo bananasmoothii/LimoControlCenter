@@ -3,6 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import { defineComponent } from 'vue'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
+import { robotCount } from '@/components/3D/robots'
 
 export default defineComponent({
   name: 'App',
@@ -12,13 +13,13 @@ export default defineComponent({
     RouterLink,
     RouterView
   },
-  data() {
-    return {
-      links: [
-        { name: 'Home', to: '/' }
+  computed: {
+    links() {
+      return [
+        { name: 'Connected: ' + robotCount.value, to: '/' }
       ]
-    }
-  }
+    },
+  },
 })
 </script>
 

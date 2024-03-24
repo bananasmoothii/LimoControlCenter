@@ -8,20 +8,17 @@ export default defineComponent({
   components: { ContactInfo, Brand },
   props: {
     links: {
-      type: Array as () => { name: string; to: string }[]
+      type: Array as () => { name: string, to: string }[]
     }
   },
-  computed: {
-    linksWithIconCredits() {
-      if (!this.links) return []
-      const copy = this.links.slice()
-      copy.push({
-        name: 'Icon by Flowicon',
-        to: 'https://www.freepik.com/icon/bot_6819644'
-      })
-      return copy
+  data() {
+    return {
+      credits: [
+        { name: 'Icon by Flowicon', to: 'https://www.freepik.com/icon/bot_6819644' },
+        { name: 'Robot model by Mauricio M.', to: 'https://www.fiverr.com/mauriciodm' }
+      ]
     }
-  }
+  },
 })
 </script>
 
@@ -29,9 +26,18 @@ export default defineComponent({
   <footer class="mt-16 bg-background p-8 text-white">
     <div class="flex flex-col gap-8 md:flex-row md:justify-evenly">
       <Brand grow-in-md class="mx-auto md:mx-0" />
-      <ul class="flex flex-col px-4">
-        <li v-for="link in linksWithIconCredits"
-            class="mt-1.5 text-center last:pt-8 last:mt-auto text-lg last:text-sm last:italic last:mb-4">
+      <ul class="flex flex-col px-4 my-auto">
+        <li v-for="link in links" class="mt-1.5 text-center text-lg">
+          <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit md:text-left">
+            {{ link.name }}
+          </RouterLink>
+          <a v-else :href="link.to" class="text-inherit md:text-left" target="_blank" rel="noreferrer">
+            {{ link.name }}
+          </a>
+        </li>
+      </ul>
+      <ul class="flex flex-col px-4 text-sm italic my-auto">
+        <li v-for="link in credits" class="mt-1.5 text-center">
           <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit md:text-left">
             {{ link.name }}
           </RouterLink>

@@ -7,6 +7,7 @@ import type { Ref } from 'vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { searchFilter } from '@/main'
 import { cloneMeshMaterial } from '@/components/3D/util'
+import { removePin } from '@/components/3D/pin_goal'
 
 const loader = new GLTFLoader()
 
@@ -49,6 +50,7 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
     scene.getObjectByName(`robot-${robotId}`)?.removeFromParent()
     delete robotsAndPos[robotId]
     document.getElementById('robot-label-' + robotId)?.remove()
+    removePin(robotId)
   } else {
     const coords = split[1].split(',')
     const x = parseFloat(coords[0])

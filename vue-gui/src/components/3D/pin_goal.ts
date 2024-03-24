@@ -112,11 +112,20 @@ export function getPinForSelectedRobot(robotId: string | null, scene: THREE.Scen
   return pin
 }
 
-export function removeUnassignedPin() {
-  if (unassignedPin) {
-    unassignedPin.removeFromParent()
+export function removePin(robotId?: string) {
+  if (robotId) {
+    let goal = robotGoals[robotId]
+    if (goal) {
+      goal.obj.removeFromParent()
+      delete robotGoals[robotId]
+      document.getElementById('pin-label-' + robotId)?.remove()
+    }
+  } else {
+    if (unassignedPin) {
+      unassignedPin.removeFromParent()
+    }
+    document.getElementById('pin-label-null')?.remove()
   }
-  document.getElementById('pin-label-null')?.remove()
 }
 
 type LaunchRobotGoals = {

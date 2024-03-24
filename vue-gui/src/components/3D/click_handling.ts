@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { getPinForSelectedRobot, removeUnassignedPin, unassignedPin } from '@/components/3D/pin_goal'
+import { getPinForSelectedRobot, removePin, unassignedPin } from '@/components/3D/pin_goal'
 import { selectedRobot } from '@/components/3D/robots'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
@@ -48,7 +48,7 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
           let pinObj = getPinForSelectedRobot(clickedRobot, scene)
           pinObj.visible = true
           pinObj.position.copy(unassignedPin.position)
-          removeUnassignedPin()
+          removePin()
         } else {
           selectedRobot.value = clickedRobot
         }
@@ -63,7 +63,7 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
         pinObj.position.copy(intersect.point)
       } else {
         if (unassignedPin?.parent) {
-          removeUnassignedPin()
+          removePin()
         }
       }
 

@@ -73,7 +73,7 @@ function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
   return obj
 }
 
-export function animatePin() {
+export function animatePins() {
   for (const goal of Object.values(robotGoals).concat([{ obj: unassignedPin! }])) {
     let pin = goal.obj
     if (defaultPinObj !== undefined && pin.visible) {

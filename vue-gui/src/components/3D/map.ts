@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import { InstancedMesh } from 'three'
+import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 export const CUBE_SIZE: number = 0.0457
 
@@ -33,15 +35,64 @@ export function handleUpdateMapSockets(host: string, scene: THREE.Scene) {
   })
 }
 
+const loader = new GLTFLoader()
 
-// const cube = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)
+let cloudsMesh: InstancedMesh[] = []
+
+let cloudsLoaded = false
+
+let cloudsMaterial = new THREE.MeshLambertMaterial({
+  color: 0xf5f5f5,
+  transparent: true,
+  opacity: 0.6
+})
+
+function loadCloudsIfNeeded(scene: THREE.Object3D) {
+  if (cloudsLoaded) return
+  for (let i = 1; i <= 4; i++) {
+    loader.load(`/3D_models/clouds/cloud${i}.glb`, (gltf: GLTF) => {
+      const cloud = gltf.scene.children[0] as THREE.Group
+      let scale = 0.1
+      cloud.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          let geometry = (child as THREE.Mesh).geometry
+          geometry.scale(scale, scale, scale)
+          const instanceMesh = new InstancedMesh(geometry, cloudsMaterial, 3000)
+          instanceMesh.count = 0
+          instanceMesh.castShadow = true
+          instanceMesh.receiveShadow = true
+          cloudsMesh.push(instanceMesh)
+          scene.add(instanceMesh)
+        }
+      })
+      if (cloudsMesh.length === 4) {
+        cloudsLoaded = true
+        executeOnCloudsLoaded.forEach(f => f())
+      }
+    })
+  }
+}
+
+const executeOnCloudsLoaded: (() => void)[] = []
+
+function doWithCloudsLoaded(callback: () => void) {
+  if (cloudsLoaded) {
+    callback()
+  } else {
+    executeOnCloudsLoaded.push(callback)
+  }
+}
+
+const smallWall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 2, CUBE_SIZE)
+smallWall.translate(0, CUBE_SIZE, 0)
 const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 8, CUBE_SIZE)
+wall.translate(0, CUBE_SIZE * 4, 0)
 
 const wallMaterial = new THREE.MeshLambertMaterial({
   color: 0xffffff
 })
 const unknownMaterial = new THREE.MeshLambertMaterial({
-  color: 0x444444
+  color: 0x888888
 })
 
 // 50 is a default value, if more are needed, you need to create a new mesh
@@ -49,7 +100,7 @@ const unknownMaterial = new THREE.MeshLambertMaterial({
 let wallMesh: InstancedMesh = new InstancedMesh(wall, wallMaterial, 3000)
 wallMesh.count = 0
 
-let unknownMesh: InstancedMesh = new InstancedMesh(wall, unknownMaterial, 3000)
+let unknownMesh: InstancedMesh = new InstancedMesh(smallWall, unknownMaterial, 3000) // TODO: adjust size
 unknownMesh.count = 0
 
 wallMesh.castShadow = true
@@ -77,6 +128,8 @@ function getPointIndex(x: number, y: number, positionsX: number[], positionsY: n
 
 export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
   const changedPoints = deserializeMapPointsDiff(diff)
+
+  loadCloudsIfNeeded(scene)
 
   if (!meshAdded) {
     scene.add(wallMesh)
@@ -123,6 +176,19 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
         unknownMesh.dispose()
         unknownMesh = newMesh
         scene.add(unknownMesh)
+      })
+      doWithCloudsLoaded(() => {
+        let x = Math.round(point.x / CUBE_SIZE)
+        let y = Math.round(point.y / CUBE_SIZE)
+        // console.log('number', number)
+        if (x % 3 !== 0 || y % 3 !== 0 || Math.round(Math.random() * 1.3) === 0) return
+        let cloudNb = Math.floor(Math.random() * 4)
+        addPoint(point, cloudsMesh[cloudNb], unknownPositionsX, unknownPositionsY, (newMesh) => {
+          cloudsMesh[cloudNb].removeFromParent()
+          cloudsMesh[cloudNb].dispose()
+          cloudsMesh[cloudNb] = newMesh
+          scene.add(cloudsMesh[cloudNb])
+        })
       })
     }
   }
@@ -206,3 +272,35 @@ export function serializeStringPoint(point: Point): string {
   if (point.z !== undefined) return `${point.x},${point.y},${point.z}`
   return `${point.x},${point.y}`
 }
+
+export function animateClouds() {
+  for (let cloudMesh of cloudsMesh) {
+    for (let i = 0; i < cloudMesh.count; i++) {
+      cloudMesh.getMatrixAt(i, dummy.matrix)
+      dummy.position.setFromMatrixPosition(dummy.matrix)
+      dummy.position.y = CUBE_SIZE * 4 + 0.08 * Math.sin(dummy.position.x + dummy.position.z + Date.now() / 2000)
+      dummy.rotation.y = (dummy.position.x + dummy.position.z) * 100 + Date.now() / 10000
+      dummy.updateMatrix()
+      cloudMesh.setMatrixAt(i, dummy.matrix)
+    }
+    cloudMesh.instanceMatrix.needsUpdate = true
+  }
+}
+
+// function getRandomNumberBasedOn(point: Point) {
+//   return sfc32(point.x, point.y, 3, 7)
+// }
+//
+// // taken from https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+// function sfc32(a: number, b: number, c: number, d: number) {
+//   return function() {
+//     a |= 0; b |= 0; c |= 0; d |= 0;
+//     let t = (a + b | 0) + d | 0;
+//     d = d + 1 | 0;
+//     a = b ^ b >>> 9;
+//     b = c + (c << 3) | 0;
+//     c = (c << 21 | c >>> 11);
+//     c = c + t | 0;
+//     return (t >>> 0) / 4294967296;
+//   }
+// }

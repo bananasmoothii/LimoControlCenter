@@ -16,10 +16,10 @@ import { XMarkIcon } from '@heroicons/vue/20/solid'
 import NoWebGLDialog from '@/components/util/NoWebGLDialog.vue'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
-import { handleUpdateMapSockets } from './map.ts'
+import { animateClouds, handleUpdateMapSockets } from './map.ts'
 import { handleRobotPosSocket, resetRobots, updateRobots } from '@/components/3D/robots.ts'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { animatePin, handleUpdateGoalSocket, loadPin } from '@/components/3D/pin_goal.ts'
+import { animatePins, handleUpdateGoalSocket, loadPin } from '@/components/3D/pin_goal.ts'
 import { click_handling } from '@/components/3D/click_handling.ts'
 import { host } from '@/components/3D/util.ts'
 
@@ -144,7 +144,8 @@ export default defineComponent({
       controls.update()
 
       updateRobots(scene)
-      animatePin()
+      animatePins()
+      animateClouds()
 
       renderer.render(scene, camera)
       labelRenderer.render(scene, camera)

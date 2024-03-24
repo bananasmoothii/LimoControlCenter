@@ -15,11 +15,22 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import redis.clients.jedis.Jedis
 
+private const val maxMapPointDiffSize = Int.MAX_VALUE
+
 /**
  * Translates two lists of points (added and removed) to a WebSocket frame.
  */
-private fun webSocketMapPointDiff(mapPointsDiff: StringMapPointsDiff): Frame =
-    Frame.Text(MapPoints.serializeMapPointsDiff(mapPointsDiff))
+private suspend fun DefaultWebSocketServerSession.sendWebSocketMapPointDiff(mapPointsDiff: StringMapPointsDiff) {
+    if (mapPointsDiff.size <= maxMapPointDiffSize) {
+        return send(Frame.Text(MapPoints.serializeMapPointsDiff(mapPointsDiff)))
+    }
+    val chunks = mapPointsDiff.chunked(maxMapPointDiffSize) { chunk ->
+        MapPoints.serializeMapPointsDiff(chunk.toSet())
+    }
+    for (chunk in chunks) {
+        send(Frame.Text(chunk))
+    }
+}
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -34,7 +45,7 @@ fun Application.configureRouting() {
 
         webSocket("/ws/update-map") {
             RobotManager.updateMapSubscribers[this] = { _, mapPointsDiff ->
-                send(webSocketMapPointDiff(mapPointsDiff))
+                sendWebSocketMapPointDiff(mapPointsDiff)
             }
 
             try {
@@ -47,7 +58,7 @@ fun Application.configureRouting() {
                         }.mapTo(mutableSetOf()) { (key, value) ->
                             value + key // key is pos and value is type letter (W, U, P)
                         }
-                        send(webSocketMapPointDiff(all))
+                        sendWebSocketMapPointDiff(all)
                     }
                 }
             } finally {

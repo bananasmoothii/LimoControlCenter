@@ -15,14 +15,15 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import redis.clients.jedis.Jedis
 
-private const val maxMapPointDiffSize = 2000
+private const val maxMapPointDiffSize = 20000
 
 /**
  * Translates two lists of points (added and removed) to a WebSocket frame.
  */
 private suspend fun DefaultWebSocketServerSession.sendWebSocketMapPointDiff(mapPointsDiff: StringMapPointsDiff) {
     if (mapPointsDiff.size <= maxMapPointDiffSize) {
-        return send(Frame.Text(MapPoints.serializeMapPointsDiff(mapPointsDiff)))
+        send(Frame.Text(MapPoints.serializeMapPointsDiff(mapPointsDiff)))
+        return
     }
     val chunks = mapPointsDiff.chunked(maxMapPointDiffSize) { chunk ->
         MapPoints.serializeMapPointsDiff(chunk.toSet())

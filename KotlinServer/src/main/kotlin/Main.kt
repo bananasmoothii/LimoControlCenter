@@ -38,7 +38,7 @@ fun main(args: Array<String>) {
                     logger.info("Redis test: $test")
                     del("limo control center test")
 
-                    // draw a square of points // TODO: remove this
+                    logger.info("Filling the map...")
                     del("map")
                     for (x in -100..100) {
                         if (x == -10 || x == 10) {

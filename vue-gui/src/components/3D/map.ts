@@ -40,6 +40,7 @@ const loader = new GLTFLoader()
 let cloudsMesh: InstancedMesh[] = []
 
 let cloudsLoaded = false
+let loadingClouds = false
 
 let cloudsMaterial = new THREE.MeshLambertMaterial({
   color: 0xf5f5f5,
@@ -48,7 +49,8 @@ let cloudsMaterial = new THREE.MeshLambertMaterial({
 })
 
 function loadCloudsIfNeeded(scene: THREE.Object3D) {
-  if (cloudsLoaded) return
+  if (cloudsLoaded || loadingClouds) return
+  loadingClouds = true
   for (let i = 1; i <= 4; i++) {
     loader.load(`/3D_models/clouds/cloud${i}.glb`, (gltf: GLTF) => {
       const cloud = gltf.scene.children[0] as THREE.Group
@@ -68,6 +70,7 @@ function loadCloudsIfNeeded(scene: THREE.Object3D) {
       })
       if (cloudsMesh.length === 4) {
         cloudsLoaded = true
+        loadingClouds = false
         executeOnCloudsLoaded.forEach(f => f())
       }
     })
@@ -138,11 +141,17 @@ function searchPointIndex(x: number, y: number, positionsX: number[], positionsY
 }
 
 function removeWallAtIndex(index: number, positionsX: number[], positionsY: number[], mesh: InstancedMesh) {
-  positionsX.splice(index, 1)
-  positionsY.splice(index, 1)
-  mesh.getMatrixAt(mesh.count - 1, dummy.matrix)
+  let x = positionsX.pop()!
+  let y = positionsY.pop()!
+  mesh.getMatrixAt(mesh.count, dummy.matrix)
+  dummy.position.set(x, 0, y)
+  dummy.rotation.set(0, 0, 0)
+  dummy.updateMatrix()
   mesh.setMatrixAt(index, dummy.matrix)
+  positionsX[index] = x
+  positionsY[index] = y
   mesh.count--
+  mesh.instanceMatrix.needsUpdate = true
 }
 
 function removePointsAt(point: Point) {
@@ -158,7 +167,6 @@ function removePointsAt(point: Point) {
       const cloudIndex = searchPointIndex(point.x, point.y, cloudPositions[i].x, cloudPositions[i].y)
       if (cloudIndex !== -1) {
         removeWallAtIndex(cloudIndex, cloudPositions[i].x, cloudPositions[i].y, cloudsMesh[i])
-        console.log('removed cloud')
       }
     }
   }
@@ -294,14 +302,39 @@ export function deserializeMapPointsDiff(serialized: string): Point[] {
 
 export function deserializeMapPointsDiffForEach(serialized: string, callback: (point: Point) => void) {
   if (onlySpacesRegex.test(serialized)) return []
-  const points = serialized.split(' ')
-  for (const point of points) {
-    if (point.length < 3) {
+  const points = serialized.split(' ').sort()
+  // points.forEach(point => {
+  //   if (point.length < 2) {
+  //     console.warn(`Invalid point: ${point}`)
+  //     return
+  //   }
+  //   callback(deserializeSinglePoint(point))
+  // })
+
+  let pointsLength = points.length
+  let i = 0
+  while (i < pointsLength) {
+    const point = points[i]
+    if (point.length < 2) {
       console.warn(`Invalid point: ${point}`)
+      i++
       continue
     }
     callback(deserializeSinglePoint(point))
+    i++
   }
+
+  // let point = ''
+  // for (let i = 0; i < serialized.length; i++) {
+  //   if (serialized[i] === ' ') {
+  //     if (point.length > 0) {
+  //       callback(deserializeSinglePoint(point))
+  //       point = ''
+  //     }
+  //   } else {
+  //     point += serialized[i]
+  //   }
+  // }
 }
 
 export function serializeStringPoint(point: Point): string {

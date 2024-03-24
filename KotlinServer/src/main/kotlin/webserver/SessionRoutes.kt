@@ -15,7 +15,7 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import redis.clients.jedis.Jedis
 
-private const val maxMapPointDiffSize = Int.MAX_VALUE
+private const val maxMapPointDiffSize = 2000
 
 /**
  * Translates two lists of points (added and removed) to a WebSocket frame.

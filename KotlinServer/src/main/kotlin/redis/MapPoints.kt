@@ -1,5 +1,6 @@
 package fr.bananasmoothii.limocontrolcenter.redis
 
+import fr.bananasmoothii.limocontrolcenter.robots.StringMapPointsDiff
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -14,7 +15,7 @@ object MapPoints {
                     val type = point[0]
                     val pointStr = point.substring(1)
 
-                    hset("map:solid", pointStr, type.toString())
+                    hset("map", pointStr, type.toString())
                 }
             }
         }
@@ -37,6 +38,21 @@ object MapPoints {
     }
 
     private fun roundCoord(x: Double): Double = Math.round(x / CUBE_SIZE) * CUBE_SIZE
+
+    fun serializeMapPointsDiff(
+        mapPointsDiff: StringMapPointsDiff,
+    ): String {
+        return mapPointsDiff.joinToString(" ")
+    }
+
+    fun deserializeMapPointsDiff(serialized: String): StringMapPointsDiff {
+        val mapPointDiff = serialized.splitToSequence(' ').toSet()
+        return mapPointDiff
+    }
+
+    fun deserializeAndRoundMapPointsDiff(serialized: String): StringMapPointsDiff {
+        return roundMapPointDiff(deserializeMapPointsDiff(serialized))
+    }
 }
 
 enum class MapPointType(val letter: Char) {

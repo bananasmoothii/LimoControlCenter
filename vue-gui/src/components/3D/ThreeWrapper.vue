@@ -21,6 +21,7 @@ import { handleRobotPosSocket, resetRobots, updateRobots } from '@/components/3D
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { animatePin, loadPin } from '@/components/3D/pin_goal.ts'
 import { click_handling } from '@/components/3D/click_handling.ts'
+import { host } from '@/components/3D/util.ts'
 
 var scene, camera, renderer, labelRenderer, controls, top
 var viewWidth = ref(0)
@@ -149,9 +150,6 @@ export default defineComponent({
       labelRenderer.render(scene, camera)
     },
     webSocketsStuff() {
-      const host = process.env.NODE_ENV === 'development' ? window.location.host.split(':')[0] : window.location.host
-      console.log(`using host '${host}' as websocket host`)
-
       handleUpdateMapSockets(host, scene)
 
       handleRobotPosSocket(host, scene)

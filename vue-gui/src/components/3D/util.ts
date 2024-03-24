@@ -8,3 +8,7 @@ export function cloneMeshMaterial(mesh: THREE.Mesh) {
     mesh.material = mesh.material.map(m => m.clone())
   }
 }
+
+// @ts-ignore
+export const host = process.env.NODE_ENV === 'development' ? window.location.host.split(':')[0] : window.location.host
+console.log(`using host '${host}' as host`)

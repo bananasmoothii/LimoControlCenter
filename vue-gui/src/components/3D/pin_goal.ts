@@ -9,7 +9,7 @@ const loader = new GLTFLoader()
 let defaultPinObj: THREE.Object3D | undefined = undefined
 
 // map of robot id to pin object
-export const robotGoals: { [key: string]: THREE.Object3D } = {}
+export const robotGoals: { [key: string]: { obj: THREE.Object3D, isFollowing?: boolean } } = {}
 
 export let unassignedPin: THREE.Object3D | undefined = undefined
 
@@ -27,7 +27,7 @@ export function loadPin(scene: THREE.Scene) {
           opacity: 0.6,
           metalness: 1,
           roughness: 0.5,
-          emissive: 0x78b569,
+          emissive: 0x53a5b8, // blue // 0x78b569 for green
           side: THREE.DoubleSide
         })
       }
@@ -71,7 +71,7 @@ function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
       buttonBox.y <= event.clientY && event.clientY <= buttonBox.y + buttonBox.height) {
 
       if (robotId !== null) {
-        robotGoals[robotId].removeFromParent()
+        robotGoals[robotId].obj.removeFromParent()
         delete robotGoals[robotId]
       } else {
         unassignedPin?.removeFromParent()
@@ -86,7 +86,8 @@ function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
 }
 
 export function animatePin() {
-  for (const pin of Object.values(robotGoals).concat([unassignedPin!])) {
+  for (const goal of Object.values(robotGoals).concat([{ obj: unassignedPin! }])) {
+    let pin = goal.obj
     if (defaultPinObj !== undefined && pin.visible) {
       pin.rotation.y = Date.now() * 0.001
       pin.position.y = 0.1 + 0.1 * Math.sin(Date.now() * 0.002)
@@ -95,20 +96,19 @@ export function animatePin() {
 }
 
 export function getPinForSelectedRobot(robotId: string | null, scene: THREE.Scene): THREE.Object3D {
-  robotId
   if (robotId === null) {
     if (unassignedPin!.parent === null) {
       scene.add(unassignedPin!)
     }
     return unassignedPin!
   }
-  let pin = robotGoals[robotId]
+  let pin = robotGoals[robotId]?.obj
   if (pin) {
     return pin
   }
   pin = getNewPin(robotId)
   scene.add(pin)
-  robotGoals[robotId] = pin
+  robotGoals[robotId] = { obj: pin }
   return pin
 }
 
@@ -117,4 +117,43 @@ export function removeUnassignedPin() {
     unassignedPin.removeFromParent()
   }
   document.getElementById('pin-label-null')?.remove()
+}
+
+type LaunchRobotGoals = {
+  [key: string]: {
+    x: number,
+    y: number,
+  }
+}
+
+export function launchRobotsToGoals(robotIds: string[] = Object.keys(robotGoals)) {
+  let robotGoalsToSend: LaunchRobotGoals = {}
+  for (const [robotId, goal] of Object.entries(robotGoals)) {
+    if (!robotIds.includes(robotId)) continue
+    robotGoalsToSend[robotId] = { x: goal.obj.position.x, y: goal.obj.position.z }
+  }
+  fetch('/api/launch-robots', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ goals: robotGoalsToSend })
+  }).then(response => {
+    if (!response.ok) {
+      console.error('Error launching robots', response)
+      return
+    }
+    for (const robotId of robotIds) {
+      let goal = robotGoals[robotId]
+      goal.isFollowing = true
+      goal.obj.traverse(child => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
+          (mesh.material as THREE.MeshStandardMaterial).emissive.setHex(0x78b569)
+        }
+      })
+    }
+  }).catch(error => {
+    console.error('Error launching robots', error)
+  })
 }

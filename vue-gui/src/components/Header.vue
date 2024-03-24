@@ -18,7 +18,7 @@
               v-if="$route.path === '/'"
               type="search"
               name="search"
-              class="h-10 w-[7rem] rounded-lg border-[1px] border-gray-300 bg-gray-200 bg-opacity-50 p-2 focus:w-[90%] lg:w-[9rem] lg:focus:w-[80%] xl:w-[12rem] xl:focus:w-[24rem]"
+              class="h-10 w-[7rem] rounded-lg border-[1px] border-gray-300 bg-gray-200 bg-opacity-50 p-2 focus:w-[90%] lg:w-[9rem] lg:focus:w-[80%] xl:w-[12rem] xl:focus:w-[24rem] font-header"
               placeholder="Search..."
               v-model="searchFilter.value"
             />
@@ -26,7 +26,7 @@
         </div>
       </nav>
       <div class="hidden items-center md:flex">
-        <LogInButton class="" />
+        <LaunchAllButton class="" />
       </div>
       <div class="flex items-center md:hidden">
         <button
@@ -77,13 +77,13 @@
                   v-if="$route.path === '/'"
                   type="search"
                   name="search"
-                  class="mb-4 h-10 w-full rounded-lg border-[1px] border-gray-300 bg-gray-200 bg-opacity-50 p-2"
+                  class="mb-4 h-10 w-full rounded-lg border-[1px] border-gray-300 bg-gray-200 bg-opacity-50 p-2 font-header"
                   placeholder="Search..."
                   v-model="searchFilter.value"
                   @keyup.enter="modalClose"
                 />
                 <div class="py-6">
-                  <LogInButton @click="modalClose" />
+                  <LaunchAllButton @click="modalClose" />
                 </div>
               </div>
             </div>
@@ -123,7 +123,7 @@ import { ChevronDownIcon, PhoneIcon, PlayCircleIcon } from '@heroicons/vue/20/so
 import PrimaryButton from '@/components/buttons/PrimaryButton.vue'
 import Brand from '@/components/util/Brand.vue'
 import { searchFilter } from '@/main'
-import ImportantButtonToRepurpose from '@/components/buttons/ImportantButtonToRepurpose.vue'
+import LaunchAllButton from '@/components/buttons/LaunchAllButton.vue'
 
 export default defineComponent({
   name: 'Header',
@@ -139,7 +139,7 @@ export default defineComponent({
     }
   },
   components: {
-    LogInButton: ImportantButtonToRepurpose,
+    LaunchAllButton,
     Brand,
     PrimaryButton,
     TransitionChild,

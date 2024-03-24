@@ -1,9 +1,9 @@
 package fr.bananasmoothii.limocontrolcenter
 
 import fr.bananasmoothii.limocontrolcenter.config.Config
-import fr.bananasmoothii.limocontrolcenter.redis.DataSubscribers
 import fr.bananasmoothii.limocontrolcenter.redis.MapPoints.CUBE_SIZE
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
+import fr.bananasmoothii.limocontrolcenter.robots.RobotManager
 import fr.bananasmoothii.limocontrolcenter.webserver.Webserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -39,15 +39,15 @@ fun main(args: Array<String>) {
                     del("limo control center test")
 
                     // draw a square of points // TODO: remove this
-                    del("map:solid")
+                    del("map")
                     for (x in -10..10) {
                         if (x == -10 || x == 10) {
                             for (y in -10..10) {
-                                hset("map:solid", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "W")
+                                hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "W")
                             }
                         } else {
-                            hset("map:solid", "${x * CUBE_SIZE},${-10 * CUBE_SIZE}", "W")
-                            hset("map:solid", "${x * CUBE_SIZE},${10 * CUBE_SIZE}", "W")
+                            hset("map", "${x * CUBE_SIZE},${-10 * CUBE_SIZE}", "W")
+                            hset("map", "${x * CUBE_SIZE},${10 * CUBE_SIZE}", "W")
                         }
                     }
                 }
@@ -59,7 +59,7 @@ fun main(args: Array<String>) {
             break
         }
 
-        DataSubscribers.init()
+        RobotManager.init()
 
         // this is blocking
         Webserver.start()

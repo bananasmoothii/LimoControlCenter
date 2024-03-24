@@ -62,6 +62,7 @@ function loadCloudsIfNeeded(scene: THREE.Object3D) {
           instanceMesh.castShadow = true
           instanceMesh.receiveShadow = true
           cloudsMesh.push(instanceMesh)
+          cloudPositions.push({ x: [], y: [] })
           scene.add(instanceMesh)
         }
       })
@@ -100,7 +101,7 @@ const unknownMaterial = new THREE.MeshLambertMaterial({
 let wallMesh: InstancedMesh = new InstancedMesh(wall, wallMaterial, 3000)
 wallMesh.count = 0
 
-let unknownMesh: InstancedMesh = new InstancedMesh(smallWall, unknownMaterial, 3000) // TODO: adjust size
+let unknownMesh: InstancedMesh = new InstancedMesh(smallWall, unknownMaterial, 60000)
 unknownMesh.count = 0
 
 wallMesh.castShadow = true
@@ -118,7 +119,17 @@ let wallPositionsY: number[] = []
 let unknownPositionsX: number[] = []
 let unknownPositionsY: number[] = []
 
-function getPointIndex(x: number, y: number, positionsX: number[], positionsY: number[]): number {
+let cloudPositions: { x: number[], y: number[] }[] = []
+
+function forAllCloudPos(callback: (x: number, y: number) => boolean | void) {
+  for (let cloud of cloudPositions) {
+    for (let i = 0; i < cloud.x.length; i++) {
+      if (callback(cloud.x[i], cloud.y[i])) return
+    }
+  }
+}
+
+function searchPointIndex(x: number, y: number, positionsX: number[], positionsY: number[]): number {
   for (let i = 0; i < positionsX.length; i++) {
     if (positionsX[i] === x && positionsY[i] === y) return i
   }
@@ -126,42 +137,53 @@ function getPointIndex(x: number, y: number, positionsX: number[], positionsY: n
 
 }
 
-export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
-  const changedPoints = deserializeMapPointsDiff(diff)
+function removeWallAtIndex(index: number, positionsX: number[], positionsY: number[], mesh: InstancedMesh) {
+  positionsX.splice(index, 1)
+  positionsY.splice(index, 1)
+  mesh.getMatrixAt(mesh.count - 1, dummy.matrix)
+  mesh.setMatrixAt(index, dummy.matrix)
+  mesh.count--
+}
 
+function removePointsAt(point: Point) {
+  const wallIndex = searchPointIndex(point.x, point.y, wallPositionsX, wallPositionsY)
+  if (wallIndex !== -1) {
+    removeWallAtIndex(wallIndex, wallPositionsX, wallPositionsY, wallMesh)
+  }
+  const unknownIndex = searchPointIndex(point.x, point.y, unknownPositionsX, unknownPositionsY)
+  if (unknownIndex !== -1) {
+    removeWallAtIndex(unknownIndex, unknownPositionsX, unknownPositionsY, unknownMesh)
+
+    for (let i = 0; i < cloudPositions.length; i++) {
+      const cloudIndex = searchPointIndex(point.x, point.y, cloudPositions[i].x, cloudPositions[i].y)
+      if (cloudIndex !== -1) {
+        removeWallAtIndex(cloudIndex, cloudPositions[i].x, cloudPositions[i].y, cloudsMesh[i])
+        console.log('removed cloud')
+      }
+    }
+  }
+}
+
+export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
   loadCloudsIfNeeded(scene)
 
   if (!meshAdded) {
+
     scene.add(wallMesh)
     scene.add(unknownMesh)
     meshAdded = true
   }
 
-  for (const point of changedPoints) {
+  deserializeMapPointsDiffForEach(diff, function callback(point) {
     if (point.z !== undefined) {
       console.warn('3D map does not support 3D points yet')
-      continue
+      return
     }
 
     // remove existing things at this pos
-    const wallIndex = getPointIndex(point.x, point.y, wallPositionsX, wallPositionsY)
-    if (wallIndex !== -1) {
-      wallPositionsX.splice(wallIndex, 1)
-      wallPositionsY.splice(wallIndex, 1)
-      wallMesh.getMatrixAt(wallMesh.count - 1, dummy.matrix)
-      wallMesh.setMatrixAt(wallIndex, dummy.matrix)
-      wallMesh.count--
-    }
-    const unknownIndex = getPointIndex(point.x, point.y, unknownPositionsX, unknownPositionsY)
-    if (unknownIndex !== -1) {
-      unknownPositionsX.splice(unknownIndex, 1)
-      unknownPositionsY.splice(unknownIndex, 1)
-      unknownMesh.getMatrixAt(unknownMesh.count - 1, dummy.matrix)
-      unknownMesh.setMatrixAt(unknownIndex, dummy.matrix)
-      unknownMesh.count--
-    }
+    removePointsAt(point)
 
-    if (point.type === WallPointType.PASSABLE) continue // passable is represented by absence of obstacles
+    if (point.type === WallPointType.PASSABLE) return // passable is represented by absence of obstacles
 
     if (point.type === WallPointType.WALL) {
       addPoint(point, wallMesh, wallPositionsX, wallPositionsY, (newMesh) => {
@@ -178,12 +200,21 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
         scene.add(unknownMesh)
       })
       doWithCloudsLoaded(() => {
-        let x = Math.round(point.x / CUBE_SIZE)
-        let y = Math.round(point.y / CUBE_SIZE)
+        let x = point.x
+        let y = point.y
+        let isNearOtherCloud = false
+        forAllCloudPos((cloudX, cloudY) => {
+          if (Math.abs(cloudX - x) < CUBE_SIZE * 3 && Math.abs(cloudY - y) < CUBE_SIZE * 3) {
+            isNearOtherCloud = true
+            return true
+          }
+        })
+        let xForRandom = Math.round(point.x / CUBE_SIZE)
+        let yForRandom = Math.round(point.y / CUBE_SIZE)
         // console.log('number', number)
-        if (x % 3 !== 0 || y % 3 !== 0 || Math.round(Math.random() * 1.3) === 0) return
+        if (/*xForRandom % 3 !== 0 || yForRandom % 3 !== 0*/ isNearOtherCloud || Math.floor(Math.random() * 1.2) === 0) return
         let cloudNb = Math.floor(Math.random() * 4)
-        addPoint(point, cloudsMesh[cloudNb], unknownPositionsX, unknownPositionsY, (newMesh) => {
+        addPoint(point, cloudsMesh[cloudNb], cloudPositions[cloudNb].x, cloudPositions[cloudNb].y, (newMesh) => {
           cloudsMesh[cloudNb].removeFromParent()
           cloudsMesh[cloudNb].dispose()
           cloudsMesh[cloudNb] = newMesh
@@ -191,7 +222,7 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
         })
       })
     }
-  }
+  })
 }
 
 function addPoint(
@@ -210,6 +241,7 @@ function addPoint(
   positionsX[index] = point.x
   positionsY[index] = point.y
   dummy.position.set(point.x, 0, point.y)
+  dummy.rotation.set(0, 0, 0)
   dummy.updateMatrix()
   mesh2.setMatrixAt(mesh2.count, dummy.matrix)
   mesh2.count++
@@ -255,17 +287,21 @@ const onlySpacesRegex = /^\s*$/
  * By default, all points are unknown
  */
 export function deserializeMapPointsDiff(serialized: string): Point[] {
+  const points: Point[] = []
+  deserializeMapPointsDiffForEach(serialized, (point) => points.push(point))
+  return points
+}
+
+export function deserializeMapPointsDiffForEach(serialized: string, callback: (point: Point) => void) {
   if (onlySpacesRegex.test(serialized)) return []
   const points = serialized.split(' ')
-  const deserializedPoints: Point[] = []
   for (const point of points) {
     if (point.length < 3) {
       console.warn(`Invalid point: ${point}`)
       continue
     }
-    deserializedPoints.push(deserializeSinglePoint(point))
+    callback(deserializeSinglePoint(point))
   }
-  return deserializedPoints
 }
 
 export function serializeStringPoint(point: Point): string {

@@ -42,7 +42,6 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
           }
           obj = obj.parent
         }
-        console.log('clicked on', obj.name)
         let clickedRobot = obj.name.split('-', 2)[1]
         if (unassignedPin?.parent) {
           let pinObj = getPinForRobot(clickedRobot, scene)
@@ -62,6 +61,7 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
         let pinObj = getPinForRobot(selectedRobot.value, scene)
         pinObj.visible = true
         pinObj.position.copy(intersect.point)
+        console.log('set pin to', intersect.point.x, intersect.point.z)
         if (selectedRobot.value) {
           showPinAsBeingFollowed(robotGoals[selectedRobot.value], false)
         }

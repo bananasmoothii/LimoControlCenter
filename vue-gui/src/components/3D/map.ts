@@ -3,7 +3,7 @@ import { InstancedMesh } from 'three'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-export const CUBE_SIZE: number = 0.0457
+export const CUBE_SIZE: number = 0.05
 
 export enum WallPointType {
   WALL = 'W',

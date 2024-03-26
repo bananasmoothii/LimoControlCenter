@@ -1,7 +1,6 @@
 package fr.bananasmoothii.limocontrolcenter
 
 import fr.bananasmoothii.limocontrolcenter.config.Config
-import fr.bananasmoothii.limocontrolcenter.redis.MapPoints.CUBE_SIZE
 import fr.bananasmoothii.limocontrolcenter.redis.RedisWrapper
 import fr.bananasmoothii.limocontrolcenter.robots.RobotManager
 import fr.bananasmoothii.limocontrolcenter.webserver.Webserver
@@ -39,22 +38,22 @@ fun main(args: Array<String>) {
                     del("limo control center test")
 
                     logger.info("Filling the map...")
-                    del("map")
-                    for (x in -100..100) {
-                        if (x == -10 || x == 10) {
-                            for (y in -10..10) {
-                                hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "W")
-                            }
-                        } else if (x in -10..10) {
-                            hset("map", "${x * CUBE_SIZE},${-10 * CUBE_SIZE}", "W")
-                            hset("map", "${x * CUBE_SIZE},${10 * CUBE_SIZE}", "W")
-                        }
-                        for (y in -100..100) {
-                            if (x !in -10..10 || y !in -10..10) {
-                                hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "U")
-                            }
-                        }
-                    }
+//                    del("map")
+//                    for (x in -100..100) {
+//                        if (x == -10 || x == 10) {
+//                            for (y in -10..10) {
+//                                hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "W")
+//                            }
+//                        } else if (x in -10..10) {
+//                            hset("map", "${x * CUBE_SIZE},${-10 * CUBE_SIZE}", "W")
+//                            hset("map", "${x * CUBE_SIZE},${10 * CUBE_SIZE}", "W")
+//                        }
+//                        for (y in -100..100) {
+//                            if (x !in -10..10 || y !in -10..10) {
+//                                hset("map", "${x * CUBE_SIZE},${y * CUBE_SIZE}", "U")
+//                            }
+//                        }
+//                    }
                 }
             } catch (e: JedisConnectionException) {
                 logger.error("Redis is not working! Retrying in 5 seconds...")

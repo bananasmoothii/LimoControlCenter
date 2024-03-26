@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 
 object MapPoints {
 
-    const val CUBE_SIZE: Double = 0.0457
+    const val CUBE_SIZE: Double = 0.05
 
     fun CoroutineScope.launchSaveRoundedMapPointDiff(mapPointsDiff: StringMapPointsDiff) {
         launch {

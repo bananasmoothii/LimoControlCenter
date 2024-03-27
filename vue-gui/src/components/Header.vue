@@ -21,6 +21,7 @@
               class="h-10 w-[7rem] rounded-lg border-[1px] border-gray-300 bg-gray-200 bg-opacity-50 p-2 focus:w-[90%] lg:w-[9rem] lg:focus:w-[80%] xl:w-[12rem] xl:focus:w-[24rem] font-header"
               placeholder="Search..."
               v-model="searchFilter.value"
+              @keyup.enter="enterKeyHit"
             />
           </div>
         </div>
@@ -80,7 +81,7 @@
                   class="mb-4 h-10 w-full rounded-lg border-[1px] border-gray-300 bg-gray-200 bg-opacity-50 p-2 font-header"
                   placeholder="Search..."
                   v-model="searchFilter.value"
-                  @keyup.enter="modalClose"
+                  @keyup.enter="enterKeyHit"
                 />
                 <div class="py-6">
                   <LaunchAllButton @click="modalClose" />
@@ -124,6 +125,7 @@ import PrimaryButton from '@/components/buttons/PrimaryButton.vue'
 import Brand from '@/components/util/Brand.vue'
 import { searchFilter } from '@/main'
 import LaunchAllButton from '@/components/buttons/LaunchAllButton.vue'
+import { searchFilterEnterKey } from '@/components/3D/robots'
 
 export default defineComponent({
   name: 'Header',
@@ -180,6 +182,10 @@ export default defineComponent({
     modalClose() {
       this.mobileMenuOpen = false
       this.lastClosedTime = Date.now()
+    },
+    enterKeyHit() {
+      this.modalClose()
+      searchFilterEnterKey()
     }
   },
   watch: {

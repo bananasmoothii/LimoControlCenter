@@ -8,6 +8,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { searchFilter } from '@/main'
 import { cloneMeshMaterial } from '@/components/3D/util'
 import { removePin } from '@/components/3D/pin_goal'
+import { replaceUnassignedPinByPinForRobot } from '@/components/3D/click_handling'
 
 const loader = new GLTFLoader()
 
@@ -165,7 +166,7 @@ function getNewRobot(defaultRobot: THREE.Object3D, robotId: string): THREE.Objec
   div.id = 'robot-label-' + robotId
   div.textContent = robotId
   const label = new CSS2DObject(div)
-  label.position.set(0, 0, 1.4)
+  label.position.set(0, 1.4, 0)
   obj.add(label)
 
   return obj
@@ -230,6 +231,14 @@ watch(selectedRobot, (newVal, oldVal) => {
 
 let lastSearchFilterChanged = 0
 
+export function searchFilterEnterKey() {
+  selectRobotWithSearchFilter()
+  if (selectedRobot.value) {
+    replaceUnassignedPinByPinForRobot(selectedRobot.value, scene)
+    searchFilter.value = selectedRobot.value
+  }
+}
+
 function selectRobotWithSearchFilter() {
   let newSearchFilter = searchFilter.value
   console.log('triggered searchFilter watch', newSearchFilter)
@@ -247,7 +256,6 @@ function selectRobotWithSearchFilter() {
 }
 
 export function initSearchFilterWatching() {
-  console.log('initSearchFilterWatching')
   watch(searchFilter, selectRobotWithSearchFilter, { immediate: true })
   watch(robotCount, selectRobotWithSearchFilter)
 }
@@ -262,6 +270,11 @@ function setRobotEmissivity(robotId: string, colorHex: number) {
 }
 
 function blinkRobot(robotId: string) {
+  let label = document.getElementById('robot-label-' + robotId)
+  if (label) {
+    console.log('blink', label)
+    label?.classList.add('selected')
+  }
   let colorHex = blinkIsOn ? 0xa0a0a0 : 0x000000
   setRobotEmissivity(robotId, colorHex)
   blinkIsOn = !blinkIsOn

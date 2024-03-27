@@ -29,9 +29,10 @@ var viewHeight = ref(0)
 
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
+  THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1)
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-  camera.position.set(0, 4, 4)
+  camera.position.set(0, -4, 4)
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.VSMShadowMap
@@ -44,11 +45,12 @@ function initWorld() {
   // controls: see https://threejs.org/docs/#examples/en/controls/MapControls
   controls = new MapControls(camera, labelRenderer.domElement)
   controls.enableDamping = true
-  controls.minPolarAngle = 0
-  controls.maxPolarAngle = Math.PI / 2 - 0.1
+  controls.minPolarAngle = -Math.PI / 2
+  // controls.maxPolarAngle = Math.PI / 2 - 0.1
   controls.minDistance = 1
   controls.maxDistance = 25
   controls.maxTargetRadius = 20
+  // camera.up.set(0, 0, 1)
 
   //background color
   scene.background = new THREE.Color(0xffe699)
@@ -57,7 +59,7 @@ function initWorld() {
   scene.add(ambiantLight)
 
   const light = new THREE.DirectionalLight(0xffffff, 1.6)
-  light.position.set(12, 30, 12)
+  light.position.set(12, -12, 30)
   light.target.position.set(0, 0, 0)
   light.castShadow = true
   light.shadow.bias = -0.00008
@@ -78,7 +80,7 @@ function initWorld() {
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(90, 90, 1, 1), new THREE.MeshLambertMaterial({ color: 0xffebab }))
   plane.receiveShadow = true
   plane.castShadow = false
-  plane.rotation.x = -Math.PI / 2
+  // plane.rotation.x = -Math.PI / 2
   scene.add(plane)
 
   loadPin(scene)
@@ -88,7 +90,7 @@ function initWorld() {
   const geometry = new THREE.BoxGeometry(1, 1, 1)
   const cube1 = new THREE.Mesh(geometry, material)
 
-  cube1.position.set(0.32, 0.5, 2.58)
+  cube1.position.set(0.32, 2.58, 0.5)
   cube1.scale.set(0.1, 0.1, 0.1)
   cube1.castShadow = true
   cube1.receiveShadow = true
@@ -96,7 +98,7 @@ function initWorld() {
 
   const cube2 = new THREE.Mesh(geometry, material)
 
-  cube2.position.set(0.18, 0.5, -0.09)
+  cube2.position.set(0.18, -0.09, 0.5)
   cube2.scale.set(0.1, 0.1, 0.1)
   cube2.castShadow = true
   cube2.receiveShadow = true
@@ -104,7 +106,7 @@ function initWorld() {
 
   const cube3 = new THREE.Mesh(geometry, material)
 
-  cube3.position.set(-2.39, 0.5, 2.70)
+  cube3.position.set(-2.39, 2.70, 0.5)
   cube3.scale.set(0.1, 0.1, 0.1)
   cube3.castShadow = true
   cube3.receiveShadow = true
@@ -112,7 +114,7 @@ function initWorld() {
 
   const cube4 = new THREE.Mesh(geometry, material)
 
-  cube4.position.set(-2.58, 0.5, -0.04)
+  cube4.position.set(-2.58, -0.04, 0.5)
   cube4.scale.set(0.1, 0.1, 0.1)
   cube4.castShadow = true
   cube4.receiveShadow = true
@@ -120,7 +122,7 @@ function initWorld() {
 
   const cube5 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xff0000 }))
 
-  cube5.position.set(0.0, 0.5, 0.0)
+  cube5.position.set(0.0, 0.0, 0.5)
   cube5.scale.set(0.1, 0.1, 0.1)
   cube5.castShadow = true
   cube5.receiveShadow = true
@@ -128,7 +130,7 @@ function initWorld() {
 
   const cube6 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x0000ff }))
 
-  cube6.position.set(1.0, 0.5, 0.0)
+  cube6.position.set(1.0, 0.0, 0.5)
   cube6.scale.set(0.1, 0.1, 0.1)
   cube6.castShadow = true
   cube6.receiveShadow = true
@@ -136,7 +138,7 @@ function initWorld() {
 
   const cube7 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x6060af }))
 
-  cube7.position.set(0.0, 0.5, 1.0)
+  cube7.position.set(0.0, 1.0, 0.5)
   cube7.scale.set(0.1, 0.1, 0.1)
   cube7.castShadow = true
   cube7.receiveShadow = true

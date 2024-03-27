@@ -77,8 +77,9 @@ export function animatePins() {
   for (const goal of Object.values(robotGoals).concat([{ obj: unassignedPin! }])) {
     let pin = goal.obj
     if (defaultPinObj !== undefined && pin.visible) {
+      pin.position.z = 0.1 + 0.1 * Math.sin(Date.now() * 0.002)
+      pin.rotation.x = Math.PI / 2
       pin.rotation.y = Date.now() * 0.001
-      pin.position.y = 0.1 + 0.1 * Math.sin(Date.now() * 0.002)
     }
   }
 }
@@ -151,7 +152,7 @@ function handleUpdateGoal(update: string, scene: THREE.Scene) {
     const y = parseFloat(coords[1])
 
     let goal = getPinForRobot(robotId, scene)
-    goal.position.set(x, 0, y)
+    goal.position.set(x, y, 0)
     showPinAsBeingFollowed(robotGoals[robotId], true)
   }
 }
@@ -171,12 +172,12 @@ export function launchRobotsToGoals(robotIds: string[] = Object.keys(robotGoals)
   let robotGoalsToSend: LaunchRobotGoals = {}
   for (const [robotId, goal] of Object.entries(robotGoals)) {
     if (!robotIds.includes(robotId)) continue
-    robotGoalsToSend[robotId] = { x: goal.obj.position.x, y: goal.obj.position.z }
+    robotGoalsToSend[robotId] = { x: goal.obj.position.x, y: goal.obj.position.y }
   }
   for (const robotId of robotIds) {
     let goal = robotGoals[robotId]
 
-    updateGoalSocket.send(`${robotId} ${goal.obj.position.x},${goal.obj.position.z}`)
+    updateGoalSocket.send(`${robotId} ${goal.obj.position.x},${goal.obj.position.y}`)
 
     showPinAsBeingFollowed(goal, true)
   }

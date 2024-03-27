@@ -73,7 +73,7 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
 // should match the rate of sent robot positions
 const TRANSITION_DURATION = 100 // ms
 
-const ROBOT_Y = 0.045
+const ROBOT_Z = 0.045
 
 const ROBOT_OSCILLATION_PERIOD = 500 // ms
 
@@ -92,23 +92,23 @@ export function updateRobots(scene: THREE.Scene) {
           const x = pos.last.x + distanceX * progress
           const y = pos.last.y + distanceY * progress
           const angle = pos.last.angle + angleDistance * progress
-          object.position.set(x, ROBOT_Y + 0.004 * Math.sin(2 * Math.PI * Date.now() / ROBOT_OSCILLATION_PERIOD), y)
-          object.rotation.set(0, angle + Math.PI / 2, 0)
+          object.position.set(x, y, ROBOT_Z + 0.004 * Math.sin(2 * Math.PI * Date.now() / ROBOT_OSCILLATION_PERIOD))
+          object.rotation.set(Math.PI / 2, angle + Math.PI / 2, 0)
 
           // make wheels turn
           const frontWheels = object.getObjectByName('wheels-front')
           const backWheels = object.getObjectByName('wheels-back')
           if (frontWheels !== undefined && backWheels !== undefined) {
             const movementAngle = Math.atan2(distanceY, distanceX) - angle
-            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)
+            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle) * 4
             // console.log('rotation', rotation, distanceForAngle, distanceX, distanceY, movementAngle, angle, pos.last.angle, pos.current.angle)
             frontWheels.rotation.x += rotation
             backWheels.rotation.x += rotation
           }
         } else {
           // no transition
-          object.position.set(pos.current.x, ROBOT_Y, pos.current.y)
-          object.rotation.set(0, pos.current.angle + Math.PI / 2, 0)
+          object.position.set(pos.current.x, pos.current.y, ROBOT_Z)
+          object.rotation.set(Math.PI / 2, pos.current.angle + Math.PI / 2, 0)
         }
       }
     }
@@ -165,7 +165,7 @@ function getNewRobot(defaultRobot: THREE.Object3D, robotId: string): THREE.Objec
   div.id = 'robot-label-' + robotId
   div.textContent = robotId
   const label = new CSS2DObject(div)
-  label.position.set(0, 1.4, 0)
+  label.position.set(0, 0, 1.4)
   obj.add(label)
 
   return obj

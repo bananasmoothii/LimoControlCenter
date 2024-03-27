@@ -88,10 +88,10 @@ function doWithCloudsLoaded(callback: () => void) {
   }
 }
 
-const smallWall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 2, CUBE_SIZE)
-smallWall.translate(0, CUBE_SIZE, 0)
-const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE * 8, CUBE_SIZE)
-wall.translate(0, CUBE_SIZE * 4, 0)
+const smallWall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE * 2)
+smallWall.translate(0, 0, CUBE_SIZE)
+const wall = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE * 8)
+wall.translate(0, 0, CUBE_SIZE * 4)
 
 const wallMaterial = new THREE.MeshLambertMaterial({
   color: 0xffffff
@@ -147,7 +147,7 @@ function removeWallAtIndex(index: number, positionsX: number[], positionsY: numb
   let x = positionsX.pop()!
   let y = positionsY.pop()!
   mesh.getMatrixAt(mesh.count, dummy.matrix)
-  dummy.position.set(x, 0, y)
+  dummy.position.set(x, y, 0)
   dummy.rotation.set(0, 0, 0)
   dummy.updateMatrix()
   mesh.setMatrixAt(index, dummy.matrix)
@@ -220,9 +220,8 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
             return true
           }
         })
-        let xForRandom = Math.round(point.x / CUBE_SIZE)
-        let yForRandom = Math.round(point.y / CUBE_SIZE)
-        // console.log('number', number)
+        // let xForRandom = Math.round(point.x / CUBE_SIZE)
+        // let yForRandom = Math.round(point.y / CUBE_SIZE)
         if (/*xForRandom % 3 !== 0 || yForRandom % 3 !== 0*/ isNearOtherCloud || Math.floor(Math.random() * 1.2) === 0) return
         let cloudNb = Math.floor(Math.random() * 4)
         addPoint(point, cloudsMesh[cloudNb], cloudPositions[cloudNb].x, cloudPositions[cloudNb].y, (newMesh) => {
@@ -251,7 +250,7 @@ function addPoint(
   // console.log("index", index)
   positionsX[index] = point.x
   positionsY[index] = point.y
-  dummy.position.set(point.x, 0, point.y)
+  dummy.position.set(point.x, point.y, 0)
   dummy.rotation.set(0, 0, 0)
   dummy.updateMatrix()
   mesh2.setMatrixAt(mesh2.count, dummy.matrix)
@@ -350,29 +349,12 @@ export function animateClouds() {
     for (let i = 0; i < cloudMesh.count; i++) {
       cloudMesh.getMatrixAt(i, dummy.matrix)
       dummy.position.setFromMatrixPosition(dummy.matrix)
-      dummy.position.y = CUBE_SIZE * 4 + 0.08 * Math.sin(dummy.position.x + dummy.position.z + Date.now() / 2000)
-      dummy.rotation.y = (dummy.position.x + dummy.position.z) * 100 + Date.now() / 10000
+      dummy.position.z = CUBE_SIZE * 4 + 0.08 * Math.sin(dummy.position.x + dummy.position.y + Date.now() / 2000)
+      dummy.rotation.x = Math.PI / 2
+      dummy.rotation.y = (dummy.position.x + dummy.position.y) * 100 + Date.now() / 8000
       dummy.updateMatrix()
       cloudMesh.setMatrixAt(i, dummy.matrix)
     }
     cloudMesh.instanceMatrix.needsUpdate = true
   }
 }
-
-// function getRandomNumberBasedOn(point: Point) {
-//   return sfc32(point.x, point.y, 3, 7)
-// }
-//
-// // taken from https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
-// function sfc32(a: number, b: number, c: number, d: number) {
-//   return function() {
-//     a |= 0; b |= 0; c |= 0; d |= 0;
-//     let t = (a + b | 0) + d | 0;
-//     d = d + 1 | 0;
-//     a = b ^ b >>> 9;
-//     b = c + (c << 3) | 0;
-//     c = (c << 21 | c >>> 11);
-//     c = c + t | 0;
-//     return (t >>> 0) / 4294967296;
-//   }
-// }

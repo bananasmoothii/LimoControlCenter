@@ -124,7 +124,7 @@ let robotObject: THREE.Object3D
 loader.load('/3D_models/robot.glb', (gltf: GLTF) => {
   const obj = gltf.scene
   // position and rotation are not set here, but we do resize the object, so it has thr right size
-  let scale = 0.22
+  let scale = 0.25
   obj.scale.set(scale, scale, scale)
   obj.traverse(function(child) {
     if ((child as THREE.Mesh).isMesh) { // see https://discourse.threejs.org/t/gltf-scene-traverse-property-ismesh-does-not-exist-on-type-object3d/27212

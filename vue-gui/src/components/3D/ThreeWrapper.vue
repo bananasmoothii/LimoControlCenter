@@ -46,11 +46,10 @@ function initWorld() {
   controls = new MapControls(camera, labelRenderer.domElement)
   controls.enableDamping = true
   controls.minPolarAngle = -Math.PI / 2
-  // controls.maxPolarAngle = Math.PI / 2 - 0.1
+  controls.maxPolarAngle = Math.PI / 2 - 0.1
   controls.minDistance = 1
   controls.maxDistance = 25
   controls.maxTargetRadius = 20
-  // camera.up.set(0, 0, 1)
 
   //background color
   scene.background = new THREE.Color(0xffe699)
@@ -87,7 +86,12 @@ function initWorld() {
   click_handling(scene, camera, plane, viewWidth, viewHeight)
 
   const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 })
+  const material1 = new THREE.MeshLambertMaterial({ color: 0xfcdb03 })
   const geometry = new THREE.BoxGeometry(1, 1, 1)
+
+  const ADD_X = 2.46
+  const ADD_Y = 2.46
+
   const cube1 = new THREE.Mesh(geometry, material)
 
   cube1.position.set(0.32, 2.58, 0.5)
@@ -119,6 +123,38 @@ function initWorld() {
   cube4.castShadow = true
   cube4.receiveShadow = true
   scene.add(cube4)
+
+  const cube11 = new THREE.Mesh(geometry, material1)
+
+  cube11.position.set(0.32 + ADD_X, 2.58 + ADD_Y, 0.5)
+  cube11.scale.set(0.1, 0.1, 0.1)
+  cube11.castShadow = true
+  cube11.receiveShadow = true
+  scene.add(cube11)
+
+  const cube21 = new THREE.Mesh(geometry, material1)
+
+  cube21.position.set(0.18 + ADD_X, -0.09 + ADD_Y, 0.5)
+  cube21.scale.set(0.1, 0.1, 0.1)
+  cube21.castShadow = true
+  cube21.receiveShadow = true
+  scene.add(cube21)
+
+  const cube31 = new THREE.Mesh(geometry, material1)
+
+  cube31.position.set(-2.39 + ADD_X, 2.70 + ADD_Y, 0.5)
+  cube31.scale.set(0.1, 0.1, 0.1)
+  cube31.castShadow = true
+  cube31.receiveShadow = true
+  scene.add(cube31)
+
+  const cube41 = new THREE.Mesh(geometry, material1)
+
+  cube41.position.set(-2.58 + ADD_X, -0.04 + ADD_Y, 0.5)
+  cube41.scale.set(0.1, 0.1, 0.1)
+  cube41.castShadow = true
+  cube41.receiveShadow = true
+  scene.add(cube41)
 
   const cube5 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xff0000 }))
 

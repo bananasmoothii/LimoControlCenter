@@ -54,15 +54,3 @@ object MapPoints {
         return roundMapPointDiff(deserializeMapPointsDiff(serialized))
     }
 }
-
-enum class MapPointType(val letter: Char) {
-    WALL('W'),
-    UNKNOWN('U'),
-    PASSABLE('P');
-
-    companion object {
-        fun fromLetter(letter: Char): MapPointType {
-            return entries.find { it.letter == letter } ?: error("Unknown MapPointType letter: $letter")
-        }
-    }
-}

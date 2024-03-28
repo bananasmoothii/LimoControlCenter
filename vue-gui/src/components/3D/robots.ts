@@ -64,7 +64,7 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
     scene.getObjectByName(`robot-${robotId}`)?.removeFromParent()
     delete robotsAndPos[robotId]
     document.getElementById('robot-label-' + robotId)?.remove()
-    removePin(robotId)
+    removePin(robotId, false)
   } else {
     const coords = split[1].split(',')
     let x = parseFloat(coords[0])

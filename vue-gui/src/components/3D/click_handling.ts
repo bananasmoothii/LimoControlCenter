@@ -64,7 +64,7 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
         }
       } else {
         if (unassignedPin?.parent) {
-          removePin()
+          removePin(null, true)
         }
       }
 
@@ -79,6 +79,6 @@ export function replaceUnassignedPinByPinForRobot(clickedRobot: string, scene: S
   let pinObj = getPinForRobot(clickedRobot, scene)
   pinObj.visible = true
   pinObj.position.copy(unassignedPin.position)
-  removePin()
+  removePin(null, true)
   showPinAsBeingFollowed(robotGoals[clickedRobot], false)
 }

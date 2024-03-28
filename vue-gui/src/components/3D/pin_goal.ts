@@ -64,7 +64,7 @@ function getNewPin(robotId: string | null, color?: number): THREE.Object3D {
   button.style.height = '2em'
   button.addEventListener('pointerdown', (event) => {
     ignoreNextClick.value = true
-    removePin(robotId ?? undefined)
+    removePin(robotId, true)
     button.remove()
   })
   const label = new CSS2DObject(button)
@@ -101,7 +101,7 @@ export function getPinForRobot(robotId: string | null, scene: THREE.Scene): THRE
   return pin
 }
 
-export function removePin(robotId?: string) { // TODO: find why this is called in loop sometimes
+export function removePin(robotId: string | null, sendToServer: boolean) {
   if (robotId) {
     let goal = robotGoals[robotId]
     if (goal) {
@@ -110,7 +110,9 @@ export function removePin(robotId?: string) { // TODO: find why this is called i
     }
     delete robotGoals[robotId]
     console.log('remove goal', robotId)
-    updateGoalSocket.send(`${robotId} remove`)
+    if (sendToServer) {
+      updateGoalSocket.send(`${robotId} remove`)
+    }
   } else {
     if (unassignedPin) {
       unassignedPin.removeFromParent()
@@ -145,7 +147,7 @@ function handleUpdateGoal(update: string, scene: THREE.Scene) {
   const split = update.split(' ', 2)
   const robotId = split[0]
   if (split[1] === 'remove') {
-    removePin(robotId)
+    removePin(robotId, false)
   } else {
     const coords = split[1].split(',', 2)
     const x = parseFloat(coords[0])

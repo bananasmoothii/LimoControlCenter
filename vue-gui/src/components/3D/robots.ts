@@ -67,14 +67,24 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
     removePin(robotId)
   } else {
     const coords = split[1].split(',')
-    const x = parseFloat(coords[0])
-    const y = parseFloat(coords[1])
-    const angle = parseFloat(coords[2])
+    let x = parseFloat(coords[0])
+    let y = parseFloat(coords[1])
+    let angle = parseFloat(coords[2])
 
     let transitionStartTime = Date.now()
 
     const robot = createRobotIfNotExists(robotId, scene)
     if (robot !== undefined) {
+      const lastAngle = robotsAndPos[robotId]?.current.angle
+      if (lastAngle !== undefined) {
+        // make sure the robot turns the right way
+        const angleDistance = angle - lastAngle
+        if (angleDistance > Math.PI) {
+          angle -= 2 * Math.PI
+        } else if (angleDistance < -Math.PI) {
+          angle += 2 * Math.PI
+        }
+      }
       robotsAndPos[robotId] = {
         last: robotsAndPos[robotId]?.current,
         current: { x, y, angle },

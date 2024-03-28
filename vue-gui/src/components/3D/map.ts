@@ -105,15 +105,15 @@ const unknownMaterial = new THREE.MeshLambertMaterial({
 let wallMesh: InstancedMesh = new InstancedMesh(wall, wallMaterial, 3000)
 wallMesh.count = 0
 
-let unknownMesh: InstancedMesh = new InstancedMesh(smallWall, unknownMaterial, 60000)
-unknownMesh.count = 0
+// let unknownMesh: InstancedMesh = new InstancedMesh(smallWall, unknownMaterial, 60000)
+// unknownMesh.count = 0
 
 wallMesh.castShadow = true
 wallMesh.receiveShadow = true
 wallMesh.frustumCulled = false
-unknownMesh.castShadow = true
-unknownMesh.receiveShadow = true
-unknownMesh.frustumCulled = false
+// unknownMesh.castShadow = true
+// unknownMesh.receiveShadow = true
+// unknownMesh.frustumCulled = false
 
 let meshAdded = false
 
@@ -164,7 +164,7 @@ function removePointsAt(point: Point) {
   }
   const unknownIndex = searchPointIndex(point.x, point.y, unknownPositionsX, unknownPositionsY)
   if (unknownIndex !== -1) {
-    removeWallAtIndex(unknownIndex, unknownPositionsX, unknownPositionsY, unknownMesh)
+    // removeWallAtIndex(unknownIndex, unknownPositionsX, unknownPositionsY, unknownMesh)
 
     for (let i = 0; i < cloudPositions.length; i++) {
       const cloudIndex = searchPointIndex(point.x, point.y, cloudPositions[i].x, cloudPositions[i].y)
@@ -181,7 +181,7 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
   if (!meshAdded) {
 
     scene.add(wallMesh)
-    scene.add(unknownMesh)
+    // scene.add(unknownMesh)
     meshAdded = true
   }
 
@@ -204,12 +204,12 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
         scene.add(wallMesh)
       })
     } else {
-      addPoint(point, unknownMesh, unknownPositionsX, unknownPositionsY, (newMesh) => {
-        unknownMesh.removeFromParent()
-        unknownMesh.dispose()
-        unknownMesh = newMesh
-        scene.add(unknownMesh)
-      })
+      // addPoint(point, unknownMesh, unknownPositionsX, unknownPositionsY, (newMesh) => {
+      //   unknownMesh.removeFromParent()
+      //   unknownMesh.dispose()
+      //   unknownMesh = newMesh
+      //   scene.add(unknownMesh)
+      // })
       doWithCloudsLoaded(() => {
         let x = point.x
         let y = point.y
@@ -349,7 +349,7 @@ export function animateClouds() {
     for (let i = 0; i < cloudMesh.count; i++) {
       cloudMesh.getMatrixAt(i, dummy.matrix)
       dummy.position.setFromMatrixPosition(dummy.matrix)
-      dummy.position.z = CUBE_SIZE * 4 + 0.08 * Math.sin(dummy.position.x + dummy.position.y + Date.now() / 2000)
+      dummy.position.z = CUBE_SIZE * 8 + 0.08 * Math.sin(dummy.position.x + dummy.position.y + Date.now() / 2000)
       dummy.rotation.x = Math.PI / 2
       dummy.rotation.y = (dummy.position.x + dummy.position.y) * 100 + Date.now() / 8000
       dummy.updateMatrix()

@@ -32,7 +32,7 @@ function initWorld() {
   THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1)
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-  camera.position.set(0, -4, 4)
+  camera.position.set(0, -2, 4)
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.VSMShadowMap
@@ -85,100 +85,31 @@ function initWorld() {
   loadPin(scene)
   click_handling(scene, camera, plane, viewWidth, viewHeight)
 
-  const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 })
-  const material1 = new THREE.MeshLambertMaterial({ color: 0xfcdb03 })
   const geometry = new THREE.BoxGeometry(1, 1, 1)
 
-  const ADD_X = 2.46
-  const ADD_Y = 2.46
+  const cube00 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xff0000 }))
 
-  const cube1 = new THREE.Mesh(geometry, material)
+  cube00.position.set(0.0, 0.0, 0.5)
+  cube00.scale.set(0.1, 0.1, 0.1)
+  cube00.castShadow = true
+  cube00.receiveShadow = true
+  scene.add(cube00)
 
-  cube1.position.set(0.32, 2.58, 0.5)
-  cube1.scale.set(0.1, 0.1, 0.1)
-  cube1.castShadow = true
-  cube1.receiveShadow = true
-  scene.add(cube1)
+  const cube10 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x0000ff }))
 
-  const cube2 = new THREE.Mesh(geometry, material)
+  cube10.position.set(1.0, 0.0, 0.5)
+  cube10.scale.set(0.1, 0.1, 0.1)
+  cube10.castShadow = true
+  cube10.receiveShadow = true
+  scene.add(cube10)
 
-  cube2.position.set(0.18, -0.09, 0.5)
-  cube2.scale.set(0.1, 0.1, 0.1)
-  cube2.castShadow = true
-  cube2.receiveShadow = true
-  scene.add(cube2)
+  const cube01 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x6060af }))
 
-  const cube3 = new THREE.Mesh(geometry, material)
-
-  cube3.position.set(-2.39, 2.70, 0.5)
-  cube3.scale.set(0.1, 0.1, 0.1)
-  cube3.castShadow = true
-  cube3.receiveShadow = true
-  scene.add(cube3)
-
-  const cube4 = new THREE.Mesh(geometry, material)
-
-  cube4.position.set(-2.58, -0.04, 0.5)
-  cube4.scale.set(0.1, 0.1, 0.1)
-  cube4.castShadow = true
-  cube4.receiveShadow = true
-  scene.add(cube4)
-
-  const cube11 = new THREE.Mesh(geometry, material1)
-
-  cube11.position.set(0.32 + ADD_X, 2.58 + ADD_Y, 0.5)
-  cube11.scale.set(0.1, 0.1, 0.1)
-  cube11.castShadow = true
-  cube11.receiveShadow = true
-  scene.add(cube11)
-
-  const cube21 = new THREE.Mesh(geometry, material1)
-
-  cube21.position.set(0.18 + ADD_X, -0.09 + ADD_Y, 0.5)
-  cube21.scale.set(0.1, 0.1, 0.1)
-  cube21.castShadow = true
-  cube21.receiveShadow = true
-  scene.add(cube21)
-
-  const cube31 = new THREE.Mesh(geometry, material1)
-
-  cube31.position.set(-2.39 + ADD_X, 2.70 + ADD_Y, 0.5)
-  cube31.scale.set(0.1, 0.1, 0.1)
-  cube31.castShadow = true
-  cube31.receiveShadow = true
-  scene.add(cube31)
-
-  const cube41 = new THREE.Mesh(geometry, material1)
-
-  cube41.position.set(-2.58 + ADD_X, -0.04 + ADD_Y, 0.5)
-  cube41.scale.set(0.1, 0.1, 0.1)
-  cube41.castShadow = true
-  cube41.receiveShadow = true
-  scene.add(cube41)
-
-  const cube5 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xff0000 }))
-
-  cube5.position.set(0.0, 0.0, 0.5)
-  cube5.scale.set(0.1, 0.1, 0.1)
-  cube5.castShadow = true
-  cube5.receiveShadow = true
-  scene.add(cube5)
-
-  const cube6 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x0000ff }))
-
-  cube6.position.set(1.0, 0.0, 0.5)
-  cube6.scale.set(0.1, 0.1, 0.1)
-  cube6.castShadow = true
-  cube6.receiveShadow = true
-  scene.add(cube6)
-
-  const cube7 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x6060af }))
-
-  cube7.position.set(0.0, 1.0, 0.5)
-  cube7.scale.set(0.1, 0.1, 0.1)
-  cube7.castShadow = true
-  cube7.receiveShadow = true
-  scene.add(cube7)
+  cube01.position.set(0.0, 1.0, 0.5)
+  cube01.scale.set(0.1, 0.1, 0.1)
+  cube01.castShadow = true
+  cube01.receiveShadow = true
+  scene.add(cube01)
 }
 
 export default defineComponent({

@@ -121,7 +121,6 @@ export function updateRobots(scene: THREE.Scene) {
           }
         } else {
           // no transition
-          console.log('no transition')
           object.position.set(pos.current.x, pos.current.y, ROBOT_Z + 0.004 * Math.sin(2 * Math.PI * Date.now() / ROBOT_OSCILLATION_PERIOD))
           object.rotation.set(Math.PI / 2, pos.current.angle + Math.PI / 2, 0)
         }

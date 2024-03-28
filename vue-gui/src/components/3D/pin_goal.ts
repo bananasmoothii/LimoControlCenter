@@ -101,7 +101,7 @@ export function getPinForRobot(robotId: string | null, scene: THREE.Scene): THRE
   return pin
 }
 
-export function removePin(robotId?: string) {
+export function removePin(robotId?: string) { // TODO: find why this is called in loop sometimes
   if (robotId) {
     let goal = robotGoals[robotId]
     if (goal) {

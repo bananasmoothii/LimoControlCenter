@@ -63,6 +63,8 @@ object RobotManager {
             val robotId = messageSplit[0]
             val newPos = messageSplit[1]
 
+            robots[robotId]?.lastPosString = newPos
+
             updatePosSubscribers.forEach { (_, subscriber) ->
                 scope.launch {
                     subscriber(robotId, newPos)

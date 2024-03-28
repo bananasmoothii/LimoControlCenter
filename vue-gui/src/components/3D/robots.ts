@@ -43,7 +43,20 @@ type RobotData = {
 
 let robotsAndPos: { [key: string]: RobotData } = reactive({})
 
+// const times: number[] = []
+// let lastSendTime = 0
+
 function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
+  // if (lastSendTime !== 0) {
+  //   times.push(Date.now() - lastSendTime)
+  //   if (times.length > 20) {
+  //     times.shift()
+  //     console.log('Average time between robot pos updates', times.reduce((a, b) => a + b) / times.length)
+  //   }
+  //   console.log('Time between robot pos updates', Date.now() - lastSendTime)
+  // }
+  // lastSendTime = Date.now()
+
   const split = update.split(' ')
   const robotId = split[0]
   if (split[1] === 'remove') {
@@ -72,7 +85,7 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
 }
 
 // should match the rate of sent robot positions
-const TRANSITION_DURATION = 100 // ms
+const TRANSITION_DURATION = 400 // ms
 
 const ROBOT_Z = 0.045
 
@@ -101,14 +114,15 @@ export function updateRobots(scene: THREE.Scene) {
           const backWheels = object.getObjectByName('wheels-back')
           if (frontWheels !== undefined && backWheels !== undefined) {
             const movementAngle = Math.atan2(distanceY, distanceX) - angle
-            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle) * 4
+            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)// * 4
             // console.log('rotation', rotation, distanceForAngle, distanceX, distanceY, movementAngle, angle, pos.last.angle, pos.current.angle)
             frontWheels.rotation.x += rotation
             backWheels.rotation.x += rotation
           }
         } else {
           // no transition
-          object.position.set(pos.current.x, pos.current.y, ROBOT_Z)
+          console.log('no transition')
+          object.position.set(pos.current.x, pos.current.y, ROBOT_Z + 0.004 * Math.sin(2 * Math.PI * Date.now() / ROBOT_OSCILLATION_PERIOD))
           object.rotation.set(Math.PI / 2, pos.current.angle + Math.PI / 2, 0)
         }
       }
@@ -186,6 +200,7 @@ function createRobotIfNotExists(
     if (robotObject !== undefined) {
       const robot = getNewRobot(robotObject, robotId)
       scene.add(robot)
+      console.log('Robot created ' + robotId)
       return robot
     } else {
       console.log('Robot model not loaded yet, skipping robot creation')
@@ -272,7 +287,6 @@ function setRobotEmissivity(robotId: string, colorHex: number) {
 function blinkRobot(robotId: string) {
   let label = document.getElementById('robot-label-' + robotId)
   if (label) {
-    console.log('blink', label)
     label?.classList.add('selected')
   }
   let colorHex = blinkIsOn ? 0xa0a0a0 : 0x000000

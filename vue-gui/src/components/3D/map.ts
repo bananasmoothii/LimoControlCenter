@@ -54,7 +54,7 @@ function loadCloudsIfNeeded(scene: THREE.Object3D) {
   for (let i = 1; i <= 4; i++) {
     loader.load(`/3D_models/clouds/cloud${i}.glb`, (gltf: GLTF) => {
       const cloud = gltf.scene.children[0] as THREE.Group
-      let scale = 0.1
+      let scale = 0.11
       cloud.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           let geometry = (child as THREE.Mesh).geometry
@@ -80,7 +80,7 @@ function loadCloudsIfNeeded(scene: THREE.Object3D) {
 
 const executeOnCloudsLoaded: (() => void)[] = []
 
-function doWithCloudsLoaded(callback: () => void) {
+export function doWithCloudsLoaded(callback: () => void) {
   if (cloudsLoaded) {
     callback()
   } else {

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import math
+import socket
 import threading
 import time
 
@@ -12,7 +13,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import OccupancyGrid
 
 
-ROBOT_ID = "172.17.0.1"
+ROBOT_ID = socket.gethostbyname(socket.gethostname())
 
 # Configuration de l'analyseur d'arguments
 parser = argparse.ArgumentParser(description="Exemple de script avec option --map")

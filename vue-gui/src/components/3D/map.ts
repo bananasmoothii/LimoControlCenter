@@ -45,7 +45,8 @@ let loadingClouds = false
 let cloudsMaterial = new THREE.MeshLambertMaterial({
   color: 0xf5f5f5,
   transparent: true,
-  opacity: 0.6
+  opacity: 0.6,
+  flatShading: false
 })
 
 function loadCloudsIfNeeded(scene: THREE.Object3D) {
@@ -349,7 +350,7 @@ export function animateClouds() {
     for (let i = 0; i < cloudMesh.count; i++) {
       cloudMesh.getMatrixAt(i, dummy.matrix)
       dummy.position.setFromMatrixPosition(dummy.matrix)
-      dummy.position.z = CUBE_SIZE * 8 + 0.08 * Math.sin(dummy.position.x + dummy.position.y + Date.now() / 2000)
+      dummy.position.z = CUBE_SIZE * 6 + 0.08 * Math.sin(dummy.position.x + dummy.position.y + Date.now() / 2000)
       dummy.rotation.x = Math.PI / 2
       dummy.rotation.y = (dummy.position.x + dummy.position.y) * 100 + Date.now() / 8000
       dummy.updateMatrix()

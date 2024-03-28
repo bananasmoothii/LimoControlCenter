@@ -64,7 +64,7 @@ function handleRobotPosUpdate(update: string, scene: THREE.Scene) {
     scene.getObjectByName(`robot-${robotId}`)?.removeFromParent()
     delete robotsAndPos[robotId]
     document.getElementById('robot-label-' + robotId)?.remove()
-    removePin(robotId)
+    removePin(robotId, false)
   } else {
     const coords = split[1].split(',')
     let x = parseFloat(coords[0])
@@ -124,7 +124,7 @@ export function updateRobots(scene: THREE.Scene) {
           const backWheels = object.getObjectByName('wheels-back')
           if (frontWheels !== undefined && backWheels !== undefined) {
             const movementAngle = Math.atan2(distanceY, distanceX) - angle
-            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle)// * 4
+            let rotation = Math.sqrt(distanceX ** 2 + distanceY ** 2) * Math.cos(movementAngle) * 0.35
             // console.log('rotation', rotation, distanceForAngle, distanceX, distanceY, movementAngle, angle, pos.last.angle, pos.current.angle)
             frontWheels.rotation.x += rotation
             backWheels.rotation.x += rotation

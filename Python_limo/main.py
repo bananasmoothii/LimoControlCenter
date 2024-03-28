@@ -4,6 +4,7 @@ import math
 import threading
 import time
 
+import argparse
 import redis
 import rospy
 from geometry_msgs.msg import PoseStamped
@@ -13,6 +14,12 @@ from nav_msgs.msg import OccupancyGrid
 
 ROBOT_ID = "172.17.0.1"
 
+# Configuration de l'analyseur d'arguments
+parser = argparse.ArgumentParser(description="Exemple de script avec option --map")
+parser.add_argument('--map', action='store_true', help="Activer la fonction de map")
+
+# Analyser les arguments de la ligne de commande
+args = parser.parse_args()
 
 def keep_alive_thread():
     while True:
@@ -61,9 +68,9 @@ def listen_to_goal_F_goal_pose_sender_from_base():
 def publisher_F_goal_pose_sender_from_base():
     global goal_coord_x
     global goal_coord_y
-    rospy.init_node("Goal_pose_sender")
+
     pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
-    rate = rospy.Rate(0.5)
+    #rate = rospy.Rate(0.5)
 
     msg_to_publish = PoseStamped()
 
@@ -85,7 +92,7 @@ def publisher_F_goal_pose_sender_from_base():
     z_init_ori = 0.
     w_init_ori = 1.
 
-    rate.sleep()
+    #rate.sleep()
 
     # Setting the hearders parameters to the publisher informations
 
@@ -132,11 +139,11 @@ def callback_F_map_reader(data):
 
 
 if __name__ == "__main__":
-    r = redis.Redis(host='172.20.10.3', port=6379, decode_responses=True)
+    r = redis.Redis(host='172.20.10.11', port=6379, decode_responses=True)
 
     rospy.init_node('Le_boss')
-
-    rospy.Subscriber("/map", OccupancyGrid, callback_F_map_reader)
+    if args.map:
+        rospy.Subscriber("/map", OccupancyGrid, callback_F_map_reader)
     rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, callback_F_coord_sender_to_base)
 
     time.sleep(4)

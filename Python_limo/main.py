@@ -15,6 +15,7 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import OccupancyGrid
 
+
 ROBOT_ID = socket.gethostbyname(socket.gethostname())
 
 # Configuration de l'analyseur d'arguments
@@ -148,7 +149,7 @@ def publisher_F_goal_pose_sender_from_base():
 
 
 def callback_F_map_reader(data):
-    print('Sending map ...')
+    rospy.loginfo('Sending map ...')
 
     liste_coord = []
     for i, p in enumerate(data.data):
@@ -166,7 +167,7 @@ def callback_F_map_reader(data):
             liste_coord.append(f"U{x},{y}")
     r.publish(f"update_map", f"{ROBOT_ID} " + " ".join(liste_coord))
 
-    print("Done sending the map to database")
+    rospy.loginfo("Done sending the map to database")
 
 
 if __name__ == "__main__":

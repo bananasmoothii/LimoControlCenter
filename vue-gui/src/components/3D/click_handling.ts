@@ -43,7 +43,7 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
           }
           obj = obj.parent
         }
-        let clickedRobot = obj.name.split('-', 2)[1]
+        let clickedRobot = obj.name.substring(6)
         if (unassignedPin?.parent) {
           replaceUnassignedPinByPinForRobot(clickedRobot, scene)
         } else {
@@ -75,7 +75,6 @@ export function click_handling(scene: THREE.Scene, camera: THREE.Camera, plane: 
 
 export function replaceUnassignedPinByPinForRobot(clickedRobot: string, scene: Scene) {
   if (!unassignedPin) return
-
   let pinObj = getPinForRobot(clickedRobot, scene)
   pinObj.visible = true
   pinObj.position.copy(unassignedPin.position)

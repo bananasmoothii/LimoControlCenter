@@ -144,8 +144,10 @@ export function handleUpdateGoalSocket(host: string, scene: THREE.Scene) {
 }
 
 function handleUpdateGoal(update: string, scene: THREE.Scene) {
+  console.log('handleUpdateGoal', update)
   const split = update.split(' ', 2)
   const robotId = split[0]
+  console.log('update goal', robotId, split[1])
   if (split[1] === 'remove') {
     removePin(robotId, false)
   } else {
@@ -171,6 +173,7 @@ export function showPinAsBeingFollowed(goal: { obj: THREE.Object3D; isFollowing?
 }
 
 export function launchRobotsToGoals(robotIds: string[] = Object.keys(robotGoals)) {
+  console.log('launch robots to goals', robotIds)
   let robotGoalsToSend: LaunchRobotGoals = {}
   for (const [robotId, goal] of Object.entries(robotGoals)) {
     if (!robotIds.includes(robotId)) continue

@@ -127,6 +127,7 @@ fun Application.configureRouting() {
                                 }
                             } else {
                                 RedisWrapper.use {
+                                    logger.debug("Setting goal for {} to {}", robotId, goal)
                                     hset("robots:goals", robotId, goalStr)
                                     sendGoalMsg("$robotId $goalStr")
                                 }

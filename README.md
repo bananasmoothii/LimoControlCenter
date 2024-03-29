@@ -5,6 +5,31 @@ environment.
 
 ## How build / use
 
+**Important:** The Python file only works with **ros1**. Using ros2 should be possible with some modifications in the
+python code only.
+
+First, clone the repository in all Limo robots. In the [Python_limo](./Python_limo) folder, install the requirements:
+
+```shell
+sudo pip install -r requirements.txt
+sudo apt install tmux # use for the launch.sh file
+```
+
+There is a [launch.sh](./Python_limo/launch.sh) file that you can use to launch the robot's main node, the lidar and
+the pathfinder.
+
+Run the launch.sh file and launch the python file:
+
+```shell
+sudo chmod +x launch.sh # make the file executable
+./launch.sh
+python3 main.py
+```
+
+---
+
+Then, you can run the server in the KotlinServer folder.
+
 ### First method: run the server directly
 
 **Requirements:**

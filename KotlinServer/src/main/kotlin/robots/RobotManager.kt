@@ -65,11 +65,7 @@ object RobotManager {
 
             robots[robotId]?.lastPosString = newPos
 
-            updatePosSubscribers.forEach { (_, subscriber) ->
-                scope.launch {
-                    subscriber(robotId, newPos)
-                }
-            }
+            updatePosSubscribers.notifySubscribers(robotId, newPos)
 
             scope.launch {
                 RedisWrapper.use {
@@ -84,11 +80,7 @@ object RobotManager {
                 val robotId = messageSplit[0]
                 val mapPointsDiff = MapPoints.deserializeAndRoundMapPointsDiff(messageSplit[1])
 
-                updateMapSubscribers.forEach { (_, subscriber) ->
-                    scope.launch {
-                        subscriber(robotId, mapPointsDiff)
-                    }
-                }
+                updateMapSubscribers.notifySubscribers(robotId, mapPointsDiff)
 
                 scope.launchSaveRoundedMapPointDiff(mapPointsDiff)
             } catch (e: IllegalArgumentException) {
@@ -103,11 +95,7 @@ object RobotManager {
 
             val newGoal = deserializeGoalUpdate(newGoalStr)
 
-            updateGoalSubscriber.forEach { (_, subscriber) ->
-                scope.launch {
-                    subscriber(robotId, newGoal)
-                }
-            }
+            updateGoalSubscriber.notifySubscribers(robotId, newGoal)
 
             scope.launch {
                 RedisWrapper.use {
@@ -118,6 +106,15 @@ object RobotManager {
                     }
                 }
             }
+        }
+    }
+
+    private fun <T> ConcurrentHashMap<Any, suspend (String, T) -> Unit>.notifySubscribers(
+        robotId: String,
+        message: T
+    ) = forEach { (_, subscriber) ->
+        scope.launch {
+            subscriber(robotId, message)
         }
     }
 
@@ -143,11 +140,9 @@ object RobotManager {
             if (now - robot.lastReceivedKeepAlive > KEEP_ALIVE_TIMEOUT) {
                 logger.info("Robot ${robot.id} disconnected (no keep-alive received for 1 second)")
 
-                updatePosSubscribers.forEach { (_, subscriber) ->
-                    scope.launch {
-                        subscriber(robot.id, "remove")
-                    }
-                }
+                updatePosSubscribers.notifySubscribers(robot.id, "remove")
+
+                updateGoalSubscriber.notifySubscribers(robot.id, null)
 
                 RedisWrapper.use {
                     hdel("robots:pos", robot.id)

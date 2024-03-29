@@ -28,11 +28,16 @@ def keep_alive_thread():
         r.publish("general", f"{ROBOT_ID} keep_alive")
         time.sleep(0.5)
 
+Stop_nav_x = None
+Stop_nav_y = None
 
 def callback_F_coord_sender_to_base(data):
     x = data.pose.pose.position.x + 2.46
     y = data.pose.pose.position.y + 2.46
     z_or = data.pose.pose.orientation.z
+
+    Stop_nav_x = x
+    Stop_nav_y = y
 
     if z_or >= 0:
         angle = 2 * math.acos(data.pose.pose.orientation.w)
@@ -45,6 +50,7 @@ def callback_F_coord_sender_to_base(data):
 
 goal_coord_x = None
 goal_coord_y = None
+
 
 
 def listen_to_goal_F_goal_pose_sender_from_base():
@@ -61,7 +67,7 @@ def listen_to_goal_F_goal_pose_sender_from_base():
         if robot_id != ROBOT_ID:
             continue
         if goal == "remove":
-            print("remove goal for this robot")
+            goal_coord_x, goal_coord_y = Stop_nav_x,Stop_nav_y
         else:
             goal_coord_x, goal_coord_y = goal.split(',', maxsplit=2)
 
@@ -123,8 +129,8 @@ def callback_F_map_reader(data):
     for i, p in enumerate(data.data):
         cell_x = i % 1984
         cell_y = i // 1984
-        x = (cell_x - data.info.origin.position.x) * data.info.resolution - 50
-        y = (cell_y - data.info.origin.position.y) * data.info.resolution - 50
+        x = (cell_x - data.info.origin.position.x) * data.info.resolution - 50 - 2.46
+        y = (cell_y - data.info.origin.position.y) * data.info.resolution - 50 - 2.46
         if not (-5 < x < 7 and -2 < y < 10):
             continue
         if p == 0:

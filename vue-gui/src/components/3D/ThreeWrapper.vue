@@ -27,12 +27,14 @@ var scene, camera, renderer, labelRenderer, controls, top
 var viewWidth = ref(0)
 var viewHeight = ref(0)
 
+const ROS_CONST = 2.46
+
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
   THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1)
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-  camera.position.set(0, -2, 4)
+  camera.position.set(ROS_CONST / 2, ROS_CONST * 0.8, 2.5) // TODO: remove when the map is not offset anymore
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.VSMShadowMap
@@ -50,6 +52,7 @@ function initWorld() {
   controls.minDistance = 1
   controls.maxDistance = 25
   controls.maxTargetRadius = 20
+  controls.target = new THREE.Vector3(ROS_CONST / 2, ROS_CONST * 1.5, 0)
 
   //background color
   scene.background = new THREE.Color(0xffe699)

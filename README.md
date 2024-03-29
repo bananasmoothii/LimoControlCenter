@@ -23,7 +23,7 @@ Run the launch.sh file and launch the python file:
 ```shell
 sudo chmod +x launch.sh # make the file executable
 ./launch.sh
-python3 main.py
+python3 main.py --map # remove the --map argument if you don't want to send the map to the server
 ```
 
 ---

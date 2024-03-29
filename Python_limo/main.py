@@ -138,13 +138,11 @@ def publisher_F_goal_pose_sender_from_base():
     msg_to_publish.pose.orientation.y = y_init_ori
     msg_to_publish.pose.orientation.z = z_init_ori
     msg_to_publish.pose.orientation.w = w_init_ori
-
     try:
-        if abs(float(goal_coord_x) - Current_pos_x) < 0.05 and abs(float(goal_coord_y) - Current_pos_y) < 0.05:
+        if abs(float(goal_coord_x) - Current_pos_x) < 0.025 and abs(float(goal_coord_y) - Current_pos_y) < 0.025:
             stop_robot()
     except:
         None
-
     rospy.loginfo(msg_to_publish)
     pub.publish(msg_to_publish)
 

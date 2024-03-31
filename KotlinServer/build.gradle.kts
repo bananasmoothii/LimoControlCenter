@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "fr.bananasmoothii.limocontrolcenter"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 application {
     mainClass.set("$group.MainKt")

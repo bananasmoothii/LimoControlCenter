@@ -30,7 +30,24 @@ python3 main.py --map # remove the --map argument if you don't want to send the 
 
 Then, you can run the server in the KotlinServer folder.
 
-### First method: run the server directly
+### First method: use Docker (easier and less breakable but slow)
+
+**Requirements:**
+
+* Docker
+* Docker-compose
+
+For windows, see the [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/) installation guide.
+
+#### Run the server
+
+```shell
+docker-compose up --build
+```
+
+The `--build` option is useful only if you want to rebuild the image (if the code changed).
+
+### Second method: run the server directly (do this if you want to modify the server code)
 
 **Requirements:**
 
@@ -73,6 +90,9 @@ java -jar path/to/jarfile.jar
 
 If you want to run the GUI alone, you can do so by following the instructions below.
 
+Note that in development mode, the GUI will try to connect to the server at port 80. For exemple, the Kotlin server
+runs on `localhost:80` and npm's dev mode runs on `localhost:5173`, but it still tries to connect to `localhost:80`.
+
 ### Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and
@@ -106,18 +126,3 @@ npm run build
 ```
 
 </details>
-
-### Second method: use Docker (less breakable but slower to compile )
-
-**Requirements:**
-
-* Docker
-* Docker-compose
-
-For windows, see the [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/) installation guide.
-
-#### Run the server
-
-```shell
-docker-compose up --build
-```

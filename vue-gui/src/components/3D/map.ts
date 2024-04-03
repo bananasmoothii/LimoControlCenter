@@ -46,7 +46,6 @@ let cloudsMaterial = new THREE.MeshLambertMaterial({
   color: 0xf5f5f5,
   transparent: true,
   opacity: 0.6,
-  flatShading: false
 })
 
 function loadCloudsIfNeeded(scene: THREE.Object3D) {
@@ -55,7 +54,7 @@ function loadCloudsIfNeeded(scene: THREE.Object3D) {
   for (let i = 1; i <= 4; i++) {
     loader.load(`/3D_models/clouds/cloud${i}.glb`, (gltf: GLTF) => {
       const cloud = gltf.scene.children[0] as THREE.Group
-      let scale = 0.11
+      let scale = 0.18
       cloud.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           let geometry = (child as THREE.Mesh).geometry
@@ -214,17 +213,37 @@ export function handleMapPointDiff(diff: string, scene: THREE.Object3D) {
       doWithCloudsLoaded(() => {
         let x = point.x
         let y = point.y
+
+        let cloudNb = Math.floor(Math.random() * 4)
+        let cloudSize = cloudNb === 0 ? 4 : 6
+        let noCloudRadius = CUBE_SIZE * cloudSize
+
         let isNearOtherCloud = false
         forAllCloudPos((cloudX, cloudY) => {
-          if (Math.abs(cloudX - x) < CUBE_SIZE * 3 && Math.abs(cloudY - y) < CUBE_SIZE * 3) {
+          if (Math.abs(cloudX - x) < noCloudRadius && Math.abs(cloudY - y) < noCloudRadius) {
             isNearOtherCloud = true
             return true
           }
         })
-        // let xForRandom = Math.round(point.x / CUBE_SIZE)
-        // let yForRandom = Math.round(point.y / CUBE_SIZE)
-        if (/*xForRandom % 3 !== 0 || yForRandom % 3 !== 0*/ isNearOtherCloud || Math.floor(Math.random() * 1.2) === 0) return
-        let cloudNb = Math.floor(Math.random() * 4)
+
+        if (isNearOtherCloud) return
+
+        let isNearWall = false
+        for (let i = 0; i < wallPositionsX.length; i++) {
+          let distX = Math.abs(wallPositionsX[i] - x)
+          let distY = Math.abs(wallPositionsY[i] - y)
+          if (distX < noCloudRadius && distY < noCloudRadius) {
+            // isNearWall = true
+            cloudNb = 0
+            if (distX < noCloudRadius / 2 && distY < noCloudRadius / 2) {
+              isNearWall = true
+            }
+            break
+          }
+        }
+
+        if (isNearWall || Math.floor(Math.random() * 1.2) === 0) return
+
         addPoint(point, cloudsMesh[cloudNb], cloudPositions[cloudNb].x, cloudPositions[cloudNb].y, (newMesh) => {
           cloudsMesh[cloudNb].removeFromParent()
           cloudsMesh[cloudNb].dispose()

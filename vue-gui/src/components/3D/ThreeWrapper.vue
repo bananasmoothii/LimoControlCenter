@@ -29,6 +29,8 @@ var viewHeight = ref(0)
 
 const ROS_CONST = 2.46
 
+let frames = 0, prevTime = performance.now()
+
 function initWorld() {
   // do not put these in the data() function because they will break if in a proxy
   THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1)
@@ -176,6 +178,17 @@ export default defineComponent({
       updateRobots(scene)
       animatePins()
       animateClouds()
+
+
+      // FPS
+      frames++
+      const time = performance.now()
+      if (time >= prevTime + 1000) {
+        console.log('FPS:', Math.round((frames * 1000) / (time - prevTime)))
+        frames = 0
+        prevTime = time
+      }
+      //
 
       renderer.render(scene, camera)
       labelRenderer.render(scene, camera)

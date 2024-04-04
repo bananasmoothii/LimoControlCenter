@@ -104,8 +104,7 @@ const ROBOT_OSCILLATION_PERIOD = 500 // ms
 export function updateRobots(scene: THREE.Scene) {
   scene.traverse((object) => {
     if (object.name.startsWith('robot-')) {
-      const firstDashIndex = object.name.indexOf('-')
-      const robotId = object.name.substring(firstDashIndex + 1)
+      const robotId = object.name.substring(6) // 6 is the length of 'robot-'
       const pos = robotsAndPos[robotId]
       if (pos !== undefined) {
         if (pos.last !== undefined && pos.transitionStartTime !== undefined) {

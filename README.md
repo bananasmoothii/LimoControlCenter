@@ -15,6 +15,10 @@ sudo pip install -r requirements.txt
 sudo apt install tmux # use for the launch.sh file
 ```
 
+Then, edit the [main.py](./Python_limo/main.py) file to set the correct IP address of the server. Currently, it is set
+to
+`127.20.10.11` but you will need to change that, obviously.
+
 There is a [launch.sh](./Python_limo/launch.sh) file that you can use to launch the robot's main node, the lidar and
 the pathfinder.
 

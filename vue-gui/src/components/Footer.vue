@@ -28,7 +28,7 @@ export default defineComponent({
       <Brand grow-in-md class="mx-auto md:mx-0" />
       <ul class="flex flex-col px-4 my-auto">
         <li v-for="link in links" class="mt-1.5 text-center text-lg">
-          <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit md:text-left">
+          <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit">
             {{ link.name }}
           </RouterLink>
           <a v-else :href="link.to" class="text-inherit md:text-left" target="_blank" rel="noreferrer">
@@ -38,10 +38,10 @@ export default defineComponent({
       </ul>
       <ul class="flex flex-col px-4 text-sm italic my-auto">
         <li v-for="link in credits" class="mt-1.5 text-center">
-          <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit md:text-left">
+          <RouterLink v-if="! link.to.startsWith('http')" :to="link.to" class="text-inherit">
             {{ link.name }}
           </RouterLink>
-          <a v-else :href="link.to" class="text-inherit md:text-left" target="_blank" rel="noreferrer">
+          <a v-else :href="link.to" class="text-inherit" target="_blank" rel="noreferrer">
             {{ link.name }}
           </a>
         </li>

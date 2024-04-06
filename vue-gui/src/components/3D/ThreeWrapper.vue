@@ -23,6 +23,7 @@ import { animatePins, handleUpdateGoalSocket, loadPin } from '@/components/3D/pi
 import { click_handling } from '@/components/3D/click_handling.ts'
 import { host } from '@/components/3D/util.ts'
 
+// do not put these in the data() function because they will break if in a proxy
 var scene, camera, renderer, labelRenderer, controls, top
 var viewWidth = ref(0)
 var viewHeight = ref(0)
@@ -32,7 +33,6 @@ const ROS_CONST = 2.46
 let frames = 0, prevTime = performance.now()
 
 function initWorld() {
-  // do not put these in the data() function because they will break if in a proxy
   THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1)
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -81,6 +81,7 @@ function initWorld() {
 
   // debug shadow camera
   // scene.add(new THREE.CameraHelper(light.shadow.camera))
+
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(90, 90, 1, 1), new THREE.MeshLambertMaterial({ color: 0xffebab }))
   plane.receiveShadow = true
   plane.castShadow = false

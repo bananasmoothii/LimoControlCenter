@@ -16,7 +16,13 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import OccupancyGrid
 
 
-ROBOT_ID = socket.gethostbyname(socket.gethostname())
+# https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+LOCAL_IP_ADDRESS = s.getsockname()[0]
+s.close()
+
+ROBOT_ID = LOCAL_IP_ADDRESS
 
 # Configuration de l'analyseur d'arguments
 parser = argparse.ArgumentParser()
